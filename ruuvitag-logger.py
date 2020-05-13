@@ -1,30 +1,37 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# J.V.Ojala 7.5.2020
+# wcollector
 
-import time
-from ruuvitag_sensor.ble_communication import BleCommunicationNix
-from ruuvitag_sensor.ruuvi import RuuviTagSensor
-from ruuvitag_sensor.decoder import UrlDecoder
+# Copyright for portions of project RuuviTag-logger are held by 
+# Dima Tsvetkov author, 2017 as part of project RuuviTag-logger and
+# are licensed under the MIT license.
+# Copyright for other portions of project RuuviTag-logger are held by 
+# J.V.Ojala, 2020 as part of project wcollector. For license, see
+# LICENSE
 
-ble = BleCommunicationNix()
 
-# list all your tags MAC: TAG_NAME
-tags = {
-    'CC:CA:7E:52:CC:34': '1: Backyard',
-    'FB:E1:B7:04:95:EE': '2: Upstairs',
-    'E8:E0:C6:0B:B8:C5': '3: Downstairs'
-}
+column_width = 14		# 14 normal
+sample_rate = 60 # seconds
 
-# set DataFormat
-# 1 - Weather station
-# 3 - SensorTag data format 3 (under development)
-dataFormat = '1'
+# list all your tags [MAC, TAG_NAME]
+tag_macs = [
+    ['CC:CA:7E:52:CC:34', '1: Backyard'],
+    ['FB:E1:B7:04:95:EE', '2: Upstairs'],
+    ['E8:E0:C6:0B:B8:C5', '3: Downstairs']
+]
 
-dweet = True # Enable or disable dweeting True/False
+dweet = False # Enable or disable dweeting True/False
 dweetUrl = 'https://dweet.io/dweet/for/' # dweet.io url
 dweetThing = 'myHomeAtTheBeach' # dweet.io thing name
 
 db = True # Enable or disable database saving True/False
-dbFile = '/home/pi/ruuvitag/ruuvitag.db' # path to db file
+dbFile = '/home/pi/RuuviTag-logger/ruuvitag.db' # path to db file
+
+
+from ruuvitag_sensor.ruuvi import RuuviTagSensor
+from datetime import datetime
+import time
 
 if dweet:
 	import requests
@@ -40,9 +47,89 @@ Dweet format:
 	etc...
 }
 '''
-
 if db:
 	import sqlite3
+
+
+class State():
+	"Holds the state of things"
+	last_update_time = datetime.timestamp(datetime.now())
+	# All tags are collected here
+	tags = {}
+
+
+class Tag():
+	'''
+	Holds all data related to a tag
+	'''
+	def __init__(self, mac, name):
+
+		self.mac = mac
+		self.id = mac[-6:]	# A short ID
+		self.name = name
+		# The raw values
+		self._temp = []
+		self._humi = []
+		self._pres = []
+		self._batt = []
+		# The probeable values
+		self.temp = 0
+		self.humi = 0
+		self.pres = 0
+		self.batt = 0
+
+	def add(self, found_data):
+		'''
+		Add a new set of values to the Tag object.
+		'''
+		self._temp.append( found_data[1]['temperature'] )
+		self._humi.append( found_data[1]['humidity'] )
+		self._pres.append( found_data[1]['pressure'] )
+		self._batt.append( found_data[1]['battery']/1000 )
+
+	def update(self):
+		'''
+		Updates the object stored values with the calculated average of
+		values received since last update.
+		Re-initializes the object to collect a new series of data.
+		If no new datapoints were received, the previous data point is
+		retained.
+		'''
+		try:
+			self.temp = round( avg( self._temp ), 2)
+		except ZeroDivisionError:
+			pass	# If no new datapoints exist, don't change the stored value
+
+		try:
+			self.humi = round( avg( self._humi ), 2)
+		except ZeroDivisionError:
+			pass
+
+		try:
+			self.pres = round( avg( self._pres ), 2)
+		except ZeroDivisionError:
+			pass
+
+		try:
+			self.batt = round( avg( self._batt ), 3)
+		except ZeroDivisionError:
+			pass
+
+		self._temp = []
+		self._humi = []
+		self._pres = []
+		self._batt = []
+
+
+print("\nListened macs")
+
+# Collects initialized tags
+for i in tag_macs:
+	State.tags[i[0]] = Tag(i[0], i[1])
+	print(State.tags[i[0]].mac)	#DEBUG
+
+
+def db_lock():
 	# open database
 	conn = sqlite3.connect(dbFile)
 
@@ -53,75 +140,147 @@ if db:
 		print("DB table not found. Creating 'sensors' table ...")
 		conn.execute('''CREATE TABLE sensors
 			(
-				id				INTEGER		PRIMARY KEY AUTOINCREMENT	NOT NULL,
-				timestamp		NUMERIC		DEFAULT CURRENT_TIMESTAMP,
-				mac				TEXT		NOT NULL,
-				name			TEXT		NULL,
-				temperature		NUMERIC		NULL,
-				humidity		NUMERIC		NULL,
-				pressure		NUMERIC		NULL
+				id			INTEGER		PRIMARY KEY AUTOINCREMENT	NOT NULL,
+				timestamp	NUMERIC		DEFAULT CURRENT_TIMESTAMP,
+				mac			TEXT		NOT NULL,
+				name		TEXT		NULL,
+				temperature	NUMERIC		NULL,
+				humidity	NUMERIC		NULL,
+				pressure	NUMERIC		NULL,
+				voltage		NUMERIC		NULL
 			);''')
 		print("Table created successfully\n")
-
-# Extended RuuviTagSensor with name, and raw data output
-class Rtag(RuuviTagSensor):
-
-	def __init__(self, mac, name):
-		self._mac = mac
-		self._name = name
-
-	@property
-	def name(self):
-		return self._name
-
-	def getData(self):
-		return ble.get_data(self._mac)
+	return conn
 
 
-now = time.strftime('%Y-%m-%d %H:%M:%S')
-print(now+"\n")
-
-dweetData = {}
-dbData = {}
-
-for mac, name in tags.items():
-	tag = Rtag(mac, name)
-
-	print("Looking for {} ({})".format(tag._name, tag._mac))
-	# if weather station
-	if dataFormat == '1': # get parsed data
-		encoded = RuuviTagSensor.convert_data(tag.getData());
-		data = UrlDecoder().decode_data(encoded[1])
-		print ("Data received:", data)
-
-		dbData[tag._mac] = {'name': tag._name}
-		# add each sensor with value to the lists
-		for sensor, value in data.items():
-			dweetData[tag._name+' '+sensor] = value
-			dbData[tag._mac].update({sensor: value})
-
-	elif dataFormat == '3': # under development
-		print ("Data:", tag.getData())
-
-	else: # if unknown format, just print raw data
-		print ("Data:", tag.getData())
-
-	print("\n")
-
-if dweet:
+def dweet_out(dweetThing, dweetData):
 	# send data to dweet.io
 	print("Dweeting data for {} ...".format(dweetThing))
 	response = requests.post(dweetUrl+dweetThing, json=dweetData)
 	print(response)
-	#print(response.text)
+	print(response.text)
 
-if db:
-	# save data to db
-	print("Saving data to database ...")
-	for mac, content in dbData.items():
-		conn.execute("INSERT INTO sensors (timestamp,mac,name,temperature,humidity,pressure) \
-			VALUES ('{}', '{}', '{}', '{}', '{}', '{}')".\
-			format(now, mac, content['name'], content['temperature'], content['humidity'], content['pressure']))
-	conn.commit()
-	conn.close()
-	print("Done.")
+
+def handle_data(found_data):
+	# This is the callback that is called every time new data is found
+
+	# add or update fresh data with the found tag
+	if found_data[0] in State.tags:
+		State.tags[found_data[0]].add(found_data)
+
+	if db:
+		conn = db_lock()
+
+	# Get the time
+	now = datetime.timestamp(datetime.now())
+	time_passed = now - State.last_update_time
+
+	# If the sample window has closed
+	if time_passed >= sample_rate:
+
+		State.last_update_time = now
+
+		dweetData = {}
+		dbData = {}
+
+		for i in State.tags:
+			tag = State.tags[i]
+
+			# Updates the processed values in the Tag object
+			print("")
+			print(datetime.now())
+			tag.update()
+			dbData[tag.mac] = {'name': tag.name}
+
+			# Print values to terminal
+			print(title())
+			print(data_line('temp', 'C'))
+			print(data_line('pres', 'hPa'))
+			print(data_line('humi', '%'))
+			print(data_line('batt', 'V'))
+
+			# Prepare Dweet Data
+			dweetData[tag.name+' '+"temperature"] = tag.temp
+			dweetData[tag.name+' '+"pressure"] = tag.pres
+			dweetData[tag.name+' '+"humidity"] = tag.humi
+			dweetData[tag.name+' '+"voltage"] = tag.batt
+			
+			# Prepare DB Data
+			dbData[tag.mac].update({"temperature": tag.temp})
+			dbData[tag.mac].update({"pressure": tag.pres})
+			dbData[tag.mac].update({"humidity": tag.humi})
+			dbData[tag.mac].update({"voltage": tag.batt})
+
+		if dweet:
+			# Send a dweet
+			dweet_out(dweetThing, dweetData)
+
+		if db:
+			# save data to db
+			anow = time.strftime('%Y-%m-%d %H:%M:%S')
+			for mac, content in dbData.items():
+				conn.execute("INSERT INTO sensors (timestamp,mac,name,temperature,humidity,pressure,voltage) \
+					VALUES ('{}', '{}', '{}', '{}', '{}', '{}', {})".\
+					format(anow, mac, content['name'], content['temperature'], content['humidity'], content['pressure'], content['voltage']))
+			conn.commit()
+			conn.close()
+
+
+def data_line(subject, unit=""): 
+	'''
+	Returns data from all sensors of the selected type (subject)
+	formated in a row.
+	Use: print( data_line('pres','hPa') )
+	'''
+	datas = []
+	dline = ""
+	for i in State.tags:
+		tag = State.tags[i]
+		# try:
+		if subject == 'temp':
+			avg_data = tag.temp
+
+		elif subject == 'pres':
+			avg_data = tag.pres
+
+		elif subject == 'humi':
+			avg_data = tag.humi
+
+		elif subject == 'batt':
+			avg_data = tag.batt
+
+		else:
+			print(tag, 'foo', subject)
+
+		# 1.321 + " " + "V"
+		value = str(avg_data) + " " + unit
+		datas.append( value.ljust(column_width) )
+
+
+	dline = ''.join(datas)
+	return dline
+
+
+def title():
+	'''
+	Returns the header associated with data_line()
+	Use: print( title() )
+	'''
+
+	titles = []
+	for i in State.tags:
+		titles.append( (State.tags[i].id).ljust(column_width) )
+
+	dtitle = ''.join(titles)
+	return dtitle
+
+
+def avg(lst):
+	'''
+	returns the average of the list
+	'''
+	return sum(lst) / len(lst)
+
+
+# The recommended way of listening to current Ruuvitags, using interrupts
+RuuviTagSensor.get_datas(handle_data)

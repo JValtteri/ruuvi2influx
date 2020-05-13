@@ -7,12 +7,12 @@
 			body {
 				padding: 50px;
 				background-color: black;
-				color: white;
+				color: black;
 			}
 			.chartWrapper {
 				position: relative;
 				height: 400px;
-				background-color: white;
+				background-color: black;
 			}
 		</style>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.min.js"></script>
@@ -75,6 +75,17 @@
 			options.title.text = 'Air pressure hPa';
 			options.scales.yAxes[0].scaleLabel.labelString = 'hPa';
 			var pressure = new Chart(document.getElementById("pressure"), {
+				type: 'line',
+				data: {
+					labels: {{time|safe}},
+					datasets: [{{ pressure|join(',')|safe }}]
+				},
+				options: options
+			});
+
+			options.title.text = 'Battery voltage V';
+			options.scales.yAxes[0].scaleLabel.labelString = 'V';
+			var pressure = new Chart(document.getElementById("voltage"), {
 				type: 'line',
 				data: {
 					labels: {{time|safe}},

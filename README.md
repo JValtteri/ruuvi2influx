@@ -11,6 +11,7 @@ Log RuuviTags data to SQLite database and Dweet.io and show charts on the RPi's 
   - [SQLite 3 database](https://docs.python.org/3.6/library/sqlite3.html#module-sqlite3)
   - [Dweet.io - IOT dwitter](https://dweet.io)
   - [Chart.js](http://www.chartjs.org/)
+  - [Data processing and interrupts](https://github.com/JValtteri/wstation) by [J.V.Ojala](https://github.com/JValtteri)
 
 ## Install
 
@@ -36,22 +37,23 @@ Edit `ruuvitag-logger.py` file and set desired settings.
 List and name your tags:
 
 ```python
-tags = {
-    'CC:CA:7E:52:CC:34': '1: Backyard',
-    'FB:E1:B7:04:95:EE': '2: Upstairs',
-    'E8:E0:C6:0B:B8:C5': '3: Downstairs'
-}
+tags = [
+    ['CC:CA:7E:52:CC:34', '1: Backyard'],
+    ['FB:E1:B7:04:95:EE', '2: Upstairs'],
+    ['E8:E0:C6:0B:B8:C5', '3: Downstairs']
+]
 ```
 
-Chose RuuviTag's data format:
-
-  - 1 - Weather station firmware
-  - 3 - Sensor tag firmware (in development)
+Choose a sample rate you wish:
 
 ```python
-dataFormat = '1'
+sample_rate = 60 # seconds
 ```
-  
+
+note, the sample rate effects only the *minimum* time between outputting new datapoints. Listening is constant. If you are building a databace, you may use this to limit the data to a reasonable rate.
+
+RuuviTag default RAW-format is used.
+
 If you want to use Dweet.io, enable it and set Thing name:
 
 ```python
@@ -99,13 +101,11 @@ OR
 $ python3 ruuvitag-logger.py
 ```
 
-Set crontab to run logger automatically every 30 mins:
-```bash
-Add this line to the /etc/crontab file
+It is recommended to setup a start script utilizing `screen`
 
-*/30 *  * * *   pi      /home/pi/ruuvitag/ruuvitag-logger.py > /home/pi/ruuvitag/ruuvitag.log 2> /home/pi/ruuvitag/ruuvitag.err
+```bash
+screen -S logger -d -m python3 ruuvitag-logger.py
 ```
-Cron will output success log to `ruuvitag.log` file and errors to `ruuvitag.err` file.
 
 ## Setup web-server
 
@@ -139,7 +139,17 @@ To run script in background, use nohup:
 $ sudo nohup ./ruuvitag-web.py &
 ```
 
-The server's output log will be in `nohup.out` file.
+OR `screen`
+
+```bash
+screen -S rweb -d -m sudo python3 ruuvitag-web.py
+```
+
+The server's output log will be in `nohup.out` file or accessable on the screen instance.
+
+```bash
+screen -r rweb
+```
 
 Server will listen requests in 80 port as normal web server do. Just open Raspberry's IP address in your browser.
 
