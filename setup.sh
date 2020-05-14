@@ -1,16 +1,18 @@
 #!/bin/bash
 # Setup sctipt for installing RuuviTag-logger and it's dependancies
 
-echo "Installing Python 3"
+echo "+++ Installing Python 3 +++"
 sudo apt-get update
 sudo apt-get install python3
 sudo apt-get install python3-pip
 
-echo "Installing screen"
+echo "+++ Installing screen +++"
 sudo apt-get install python3
 
-echo "Installing libraries"
-pip3 install -r requirements.txt
+echo "+++ Installing libraries +++"
+sudo apt-get install bluez-hcidump && echo +++ bluez installed +++
+sudo pip3 install --upgrade setuptools
+sudo pip3 install --user ruuvitag-sensor
 
 echo "================="
 echo -e "\nInstall complete!"

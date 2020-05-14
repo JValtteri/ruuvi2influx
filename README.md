@@ -14,40 +14,41 @@ Log RuuviTags data to SQLite database and Dweet.io and show charts on the RPi's 
   - [Data processing and interrupts](https://github.com/JValtteri/wstation) by [J.V.Ojala](https://github.com/JValtteri)
 
 ## Install
-
-Create `ruuvitag` folder in pi's home:
+The easiest way to install is by cloning with git
 ```bash
-$ mkdir /home/pi/ruuvitag
+$ git clone https://github.com/JValtteri/RuuviTag-logger.git
 ```
 
-Put files like this:
-
+then install the requirements
 ```bash
-ruuvitag
- |- ruuvitag-logger.py
- |- ruuvitag-web.py
- |- templates
-      |- ruuvitag.html
+cd RuuviTag-logger
+bash setup.sh
 ```
 
 ## Setup logger
 
-Edit `ruuvitag-logger.py` file and set desired settings.
+Edit `config.yml` file and set desired settings.
 
 List and name your tags:
 
-```python
-tags = [
-    ['CC:CA:7E:52:CC:34', '1: Backyard'],
-    ['FB:E1:B7:04:95:EE', '2: Upstairs'],
-    ['E8:E0:C6:0B:B8:C5', '3: Downstairs']
-]
+```yml
+tag_macs:
+    - 
+      - CC:CA:7E:52:CC:34
+      - Backyard
+    -
+      - FB:E1:B7:04:95:EE
+      - Upstairs
+    -
+      - E8:E0:C6:0B:B8:C5
+      - Downstairs
+
 ```
 
 Choose a sample rate you wish:
 
-```python
-sample_rate = 60 # seconds
+```yml
+sample_rate: 60 # seconds
 ```
 
 note, the sample rate effects only the *minimum* time between outputting new datapoints. Listening is constant. If you are building a databace, you may use this to limit the data to a reasonable rate.
@@ -56,10 +57,10 @@ RuuviTag default RAW-format is used.
 
 If you want to use Dweet.io, enable it and set Thing name:
 
-```python
-dweet = True # Enable or disable dweeting True/False
-dweetUrl = 'https://dweet.io/dweet/for/' # dweet.io url
-dweetThing = 'myHomeAtTheBeach' # dweet.io thing name
+```yml
+dweet: True # Enable or disable dweeting True/False
+dweetUrl: 'https://dweet.io/dweet/for/' # dweet.io url
+dweetThing: 'myHomeAtTheBeach' # dweet.io thing name
 ```
 
 Script will put all Tag's sensors in one dweet for one Thing.
@@ -78,28 +79,13 @@ Script will put all Tag's sensors in one dweet for one Thing.
 ```
 If you want to save data to local database, enable it:
 
-```python
-db = True # Enable or disable database saving True/False
-dbFile = '/home/pi/ruuvitag/ruuvitag.db' # path to db file
+```yml
+db: True # Enable or disable database saving True/False
+dbFile: '/home/pi/ruuvitag/ruuvitag.db' # path to db file
 ```
 
 Script will automatically create `ruuvitag.db` file and table for sensor data.
 
-Set execution rights to the file:
-
-```bash
-$ chmod 755 ruuvitag-logger.py
-```
-
-Now you can try to run it manually:
-
-```bash
-$ ./ruuvitag-logger.py
-OR
-$ /home/pi/ruuvitag/ruuvitag-logger.py
-OR
-$ python3 ruuvitag-logger.py
-```
 
 It is recommended to setup a start script utilizing `screen`
 
