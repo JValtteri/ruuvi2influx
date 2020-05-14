@@ -19,20 +19,20 @@ import yaml
 class Configuration():
 
 	def __init__(self):
-		self.configuration = self.readConfig()
+		config = self.readConfig()
 
-		self.column_width = None		# 14 normal
-		self.sample_rate = None # seconds
+		self.column_width = config['column_width']		# 14 normal
+		self.sample_rate = config['sample_rate'] # seconds
 
 		# list all your tags [MAC, TAG_NAME]
-		self.tag_macs = []
+		self.tag_macs = config['tag_macs']
 
-		self.dweet = False # Enable or disable dweeting True/False
-		self.dweetUrl = None # dweet.io url
-		self.dweetThing = None # dweet.io thing name
+		self.dweet = config['dweet'] # Enable or disable dweeting True/False
+		self.dweetUrl = config['dweetUrl'] # dweet.io url
+		self.dweetThing = config['dweetThing'] # dweet.io thing name
 
-		self.db = None # Enable or disable database saving True/False
-		self.dbFile = None # path to db file
+		self.db = config['db'] # Enable or disable database saving True/False
+		self.dbFile = config['dbFile'] # path to db file
 
 
 	def readConfig(self):
