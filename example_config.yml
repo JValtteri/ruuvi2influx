@@ -1,0 +1,31 @@
+######################################
+# RuuviTag-logger Configuration file #
+######################################
+
+# DWEET
+dweet: False                    # Enable or disable dweeting True/False
+dweetUrl: 'https://dweet.io/dweet/for/' # dweet.io url
+dweetThing: 'myHomeAtTheBeach'  # dweet.io thing name
+
+# DATA BACE
+db: True                        # Enable or disable database saving True/False
+dbFile: "/home/pi/RuuviTag-logger/ruuvitag.db" # path to db file
+
+sample_rate: 60 # seconds
+
+# Column width on screen
+column_width: 14		# 14 normal
+
+# list all your tags 
+# - MAC 
+# - TAG_NAME
+tag_macs:
+    - 
+      - CC:CA:7E:52:CC:34
+      - Backyard
+    -
+      - FB:E1:B7:04:95:EE
+      - Upstairs
+    -
+      - E8:E0:C6:0B:B8:C5
+      - Downstairs

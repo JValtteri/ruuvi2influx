@@ -11,45 +11,48 @@
 # LICENSE
 
 
-column_width = 14		# 14 normal
-sample_rate = 60 # seconds
-
-# list all your tags [MAC, TAG_NAME]
-tag_macs = [
-    ['CC:CA:7E:52:CC:34', '1: Backyard'],
-    ['FB:E1:B7:04:95:EE', '2: Upstairs'],
-    ['E8:E0:C6:0B:B8:C5', '3: Downstairs']
-]
-
-dweet = False # Enable or disable dweeting True/False
-dweetUrl = 'https://dweet.io/dweet/for/' # dweet.io url
-dweetThing = 'myHomeAtTheBeach' # dweet.io thing name
-
-db = True # Enable or disable database saving True/False
-dbFile = '/home/pi/RuuviTag-logger/ruuvitag.db' # path to db file
-
-
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 from datetime import datetime
 import time
+import yaml
 
-if dweet:
-	import requests
-'''
-Dweet format:
-{
-	'TAG_NAME1 temperature': VALUE,
-	'TAG_NAME1 humidity': VALUE,
-	'TAG_NAME1 pressure': VALUE,
-	'TAG_NAME2 temperature': VALUE,
-	'TAG_NAME2 humidity': VALUE,
-	'TAG_NAME2 pressure': VALUE,
-	etc...
-}
-'''
-if db:
-	import sqlite3
+class Configuration():
 
+	def __init__(self):
+		self.configuration = self.readConfig()
+
+		self.column_width = None		# 14 normal
+		self.sample_rate = None # seconds
+
+		# list all your tags [MAC, TAG_NAME]
+		self.tag_macs = []
+
+		self.dweet = False # Enable or disable dweeting True/False
+		self.dweetUrl = None # dweet.io url
+		self.dweetThing = None # dweet.io thing name
+
+		self.db = None # Enable or disable database saving True/False
+		self.dbFile = None # path to db file
+
+
+	def readConfig(self):
+		"""
+		Reads the config file and returns the dict of
+		all settings.
+		"""
+
+		filename = "config.yml"
+
+		try:
+			configfile = open(filename, 'r')
+		except FileNotFoundError:
+			print("Error: Could not find %s" % filename)
+			exit()
+
+		settings = yaml.load(configfile)
+		configfile.close()
+
+		return settings
 
 class State():
 	"Holds the state of things"
@@ -120,18 +123,37 @@ class Tag():
 		self._pres = []
 		self._batt = []
 
+config = Configuration()
+
+
+if config.dweet:
+	import requests
+'''
+Dweet format:
+{
+	'TAG_NAME1 temperature': VALUE,
+	'TAG_NAME1 humidity': VALUE,
+	'TAG_NAME1 pressure': VALUE,
+	'TAG_NAME2 temperature': VALUE,
+	'TAG_NAME2 humidity': VALUE,
+	'TAG_NAME2 pressure': VALUE,
+	etc...
+}
+'''
+if config.db:
+	import sqlite3
 
 print("\nListened macs")
 
 # Collects initialized tags
-for i in tag_macs:
+for i in config.tag_macs:
 	State.tags[i[0]] = Tag(i[0], i[1])
 	print(State.tags[i[0]].mac)	#DEBUG
 
 
 def db_lock():
 	# open database
-	conn = sqlite3.connect(dbFile)
+	conn = sqlite3.connect(config.dbFile)
 
 	# check if table exists
 	cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='sensors'")
@@ -156,7 +178,7 @@ def db_lock():
 def dweet_out(dweetThing, dweetData):
 	# send data to dweet.io
 	print("Dweeting data for {} ...".format(dweetThing))
-	response = requests.post(dweetUrl+dweetThing, json=dweetData)
+	response = requests.post(config.dweetUrl+dweetThing, json=dweetData)
 	print(response)
 	print(response.text)
 
@@ -168,7 +190,7 @@ def handle_data(found_data):
 	if found_data[0] in State.tags:
 		State.tags[found_data[0]].add(found_data)
 
-	if db:
+	if config.db:
 		conn = db_lock()
 
 	# Get the time
@@ -176,7 +198,7 @@ def handle_data(found_data):
 	time_passed = now - State.last_update_time
 
 	# If the sample window has closed
-	if time_passed >= sample_rate:
+	if time_passed >= config.sample_rate:
 
 		State.last_update_time = now
 
@@ -211,11 +233,11 @@ def handle_data(found_data):
 			dbData[tag.mac].update({"humidity": tag.humi})
 			dbData[tag.mac].update({"voltage": tag.batt})
 
-		if dweet:
+		if config.dweet:
 			# Send a dweet
-			dweet_out(dweetThing, dweetData)
+			dweet_out(config.dweetThing, dweetData)
 
-		if db:
+		if config.db:
 			# save data to db
 			anow = time.strftime('%Y-%m-%d %H:%M:%S')
 			for mac, content in dbData.items():
@@ -254,7 +276,7 @@ def data_line(subject, unit=""):
 
 		# 1.321 + " " + "V"
 		value = str(avg_data) + " " + unit
-		datas.append( value.ljust(column_width) )
+		datas.append( value.ljust(config.column_width) )
 
 
 	dline = ''.join(datas)
@@ -269,7 +291,7 @@ def title():
 
 	titles = []
 	for i in State.tags:
-		titles.append( (State.tags[i].id).ljust(column_width) )
+		titles.append( (State.tags[i].id).ljust(config.column_width) )
 
 	dtitle = ''.join(titles)
 	return dtitle
