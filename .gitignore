@@ -1,0 +1,10 @@
+# Ignore this
+*.pyc
+*.pdf
+*.txt
+__*
+*_test
+.vscode
+*.code-workspace
+config.yml
+*.db
