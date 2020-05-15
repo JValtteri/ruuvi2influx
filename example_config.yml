@@ -29,3 +29,14 @@ tag_macs:
     -
       - E8:E0:C6:0B:B8:C5
       - Downstairs
+
+# Web
+N: 30 # show charts for N days
+line_colors:
+  randomize: True # Display colors in random order.
+  colors:
+    - "#FF11FF"
+    - "#FF5511"
+    - "#11FF55"
+
+    # If colors run out, a random color will be generated
