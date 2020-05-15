@@ -12,7 +12,7 @@
 			.chartWrapper {
 				position: relative;
 				height: 400px;
-				background-color: black;
+				background-color: #111111;
 			}
 		</style>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.min.js"></script>
@@ -27,9 +27,15 @@
 			var options = {
 				responsive: true,
 				maintainAspectRatio: false,
+				legend: {
+					labels: {
+						fontColor: "#A0A0A0"
+					}
+				},
 				title: {
 					display: true,
-					fontSize: 18
+					fontSize: 18,
+					fontColor: "#A0A0A0"
 				},
 				layout: {
 					padding: {
@@ -42,10 +48,23 @@
 					yAxes: [{
 						position: 'right',
 						scaleLabel: {
-							display: true
+							display: true,
+							fontColor: '#808080'
+						},
+						gridLines: {
+							color: "#404040"
 						},
 						ticks: {
-							beginAtZero: false
+							beginAtZero: false,
+							fontColor: "#A0A0A0"
+						}
+					}],
+					xAxes: [{
+						ticks: {
+							fontColor: "#A0A0A0"
+						},
+						gridLines: {
+							color: "#404040"
 						}
 					}]
 				}
