@@ -38,7 +38,7 @@ class Configuration():
 			print("Error: Could not find %s" % filename)
 			exit()
 
-		settings = yaml.load(configfile)
+		settings = yaml.load(configfile, Loader=yaml.SafeLoader)
 		configfile.close()
 
 		return settings
