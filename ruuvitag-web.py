@@ -9,23 +9,62 @@ from datetime import datetime, timedelta
 import sqlite3
 import json
 import random
+import yaml
 
 app = Flask(__name__)
 
-def randomRGB():
-    r, g, b = [random.randint(0,255) for i in range(3)]
-    return r, g, b, 1
+
+class Configuration():
+
+	def __init__(self):
+		config = self.readConfig()
+
+		self.port = config['port']
+		self.days = config['days']
+		self.randomize = config['line_colors']['randomize']
+		self.colors = config['line_colors']['colors']
+
+	def readConfig(self):
+		"""
+		Reads the config file and returns the dict of
+		all settings.
+		"""
+
+		filename = "config.yml"
+
+		try:
+			configfile = open(filename, 'r')
+		except FileNotFoundError:
+			print("Error: Could not find %s" % filename)
+			exit()
+
+		settings = yaml.load(configfile)
+		configfile.close()
+
+		return settings
+
+
+def pick_color(config):
+	if config.randomize:
+		random.shuffle(config.colors)
+	try:
+		r, g, b = config.colors.pop(0)
+	except IndexError:
+	    r, g, b = [random.randint(0,255) for i in range(3)]
+	return r, g, b, 1
 
 
 @app.route('/')
 def index():
+	config = Configuration()
+
+
 	conn = sqlite3.connect("ruuvitag.db")
 	conn.row_factory = sqlite3.Row
 
 	# set hom many days you want to see in charts
-	N = 30 # show charts for 30 days
 
-	date_N_days_ago = str(datetime.now() - timedelta(days=N))
+	date_N_days_ago = str(datetime.now() - timedelta(days=config.days))
 	tags = conn.execute("SELECT DISTINCT mac, name FROM sensors WHERE timestamp > '"+date_N_days_ago+"' ORDER BY name, timestamp DESC")
 
 	sensors = ['temperature', 'humidity', 'pressure', 'voltage']
@@ -48,7 +87,7 @@ def index():
 				for sensor in sensors:
 					sList[sensor].append(sRow[sensor])
 
-			color = randomRGB()
+			color = pick_color(config)
 
 			dataset = """{{
 				label: '{}',
@@ -64,4 +103,5 @@ def index():
 	return render_template('ruuvitag.html', time = sList['timestamp'], temperature = datasets['temperature'], humidity = datasets['humidity'], pressure = datasets['pressure'], voltage = datasets['voltage'])
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int('80'))
+	config = Configuration()
+	app.run(debug=True, host='0.0.0.0', port=int(config.port))

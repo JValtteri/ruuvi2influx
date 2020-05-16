@@ -22,10 +22,10 @@ class Configuration():
 		config = self.readConfig()
 
 		self.column_width = config['column_width']		# 14 normal
-		self.sample_rate = config['sample_rate'] # seconds
+		self.sample_interval = config['sample_interval'] # seconds
 
 		# list all your tags [MAC, TAG_NAME]
-		self.tag_macs = config['tag_macs']
+		self.tags = config['tags']
 
 		self.dweet = config['dweet'] # Enable or disable dweeting True/False
 		self.dweetUrl = config['dweetUrl'] # dweet.io url
@@ -146,9 +146,10 @@ if config.db:
 print("\nListened macs")
 
 # Collects initialized tags
-for i in config.tag_macs:
-	State.tags[i[0]] = Tag(i[0], i[1])
-	print(State.tags[i[0]].mac)	#DEBUG
+macs = config.tags
+for mac in macs:
+	State.tags[mac] = Tag(mac, macs[mac])
+	print(State.tags[mac].mac)
 
 
 def db_lock():
@@ -198,7 +199,7 @@ def handle_data(found_data):
 	time_passed = now - State.last_update_time
 
 	# If the sample window has closed
-	if time_passed >= config.sample_rate:
+	if time_passed >= config.sample_interval:
 
 		State.last_update_time = now
 
