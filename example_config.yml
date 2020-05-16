@@ -2,30 +2,61 @@
 # RuuviTag-logger Configuration file #
 ######################################
 
+# SAMPLE INTERVAL
+sample_interval: 60 # seconds
+
+# If you  require the maximum sample rate, set sample_interval to 0.
+# Then every time a measurement is received, it is passed 
+# forward to the ouputs you've specified.
+# 
+# If you use the integrated SQLite DB with the internal web-server,
+# it is recommended to use a longer sample_interval. 
+#
+# If you plan to keep 7 to 30 days worth of graph, and use a mobile 
+# browser, you should consider a sample_interval of of 900 (15 min) 
+# or even up to 3600 (1 hour), to improve page loading speed.
+
 # DWEET
-dweet: False                    # Enable or disable dweeting True/False
+dweet: False                            # Enable or disable dweeting
 dweetUrl: 'https://dweet.io/dweet/for/' # dweet.io url
-dweetThing: 'myHomeAtTheBeach'  # dweet.io thing name
+dweetThing: 'myHomeAtTheBeach'          # dweet.io thing name
 
 # DATA BACE
-db: True                        # Enable or disable database saving True/False
-dbFile: "/home/pi/RuuviTag-logger/ruuvitag.db" # path to db file
+db: True                                        # Enable or disable database
+dbFile: "/home/pi/RuuviTag-logger/ruuvitag.db"  # path to db file
 
-sample_rate: 60 # seconds
-
-# Column width on screen
-column_width: 14		# 14 normal
+# SCREEN
+column_width: 14  # Column width on screen (14 default)
 
 # list all your tags 
-# - MAC 
-# - TAG_NAME
-tag_macs:
-    - 
-      - CC:CA:7E:52:CC:34
-      - Backyard
-    -
-      - FB:E1:B7:04:95:EE
-      - Upstairs
-    -
-      - E8:E0:C6:0B:B8:C5
-      - Downstairs
+tags:
+  "CC:CA:7E:52:CC:34": Backyard
+  "FB:E1:B7:04:95:EE": Upstairs
+  "E8:E0:C6:0B:B8:C5": Downstairs
+
+
+# WEB GRAPHS
+port: "80"                              # Server port (default "80")
+days: 7                                 # chart length N days
+line_colors:
+  randomize: True                       # Display colors in random order.
+  colors:                               # The pre-defined coours for plots.
+    - [181,251,56] # B5FB38 neon        # If you whant completelly random 
+    - [85,231,46] # 55E72E green1       # colors, delete these colors, or 
+    - [24,173,133] # 18AD85 turqous     # comment them out with '#' at the
+                                        # beginning of the line.
+    - [8,137,177] # 0889B1 green2
+    - [113,20,150] # 711496 indigo
+    - [155,136,228] # 9B88E4 purple
+
+    - [47,70,158] # 2F469E blue
+
+    # - [103,194,99] # 67C263 green3
+    # - [203,49,49] # CB3131 red
+    # - [204,77,43] # CC4D2B amber
+    # - [183,149,60] # B7953C amber2
+    # - [45,79,63] # 2D4F3F olive
+    # - [204,77,190] # CC4DBE pink
+    # - [231,199,214] # E7C7D6 white
+
+    # If colors run out, a random colors will be generated automatically
