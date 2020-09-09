@@ -94,7 +94,8 @@ def index():
 				borderColor: 'rgba{}',
 				pointRadius: 0,
 				fill: false,
-		        lineTension: 0.2,
+				spanGaps: false,
+		        lineTension: 0,
 				data: {}
 			}}"""
 			for sensor in sensors:
