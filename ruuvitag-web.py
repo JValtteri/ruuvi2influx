@@ -92,6 +92,7 @@ def index():
 			dataset = """{{
 				label: '{}',
 				borderColor: 'rgba{}',
+				pointRadius: 0,
 				fill: false,
 		        lineTension: 0.2,
 				data: {}
