@@ -249,12 +249,14 @@ def handle_data(found_data):
 				#except sqlite3.OperationalError:
 				else:
 					pass	# Don't write 'None' to db
-			try:
-				conn.commit()
-			except sqlite3.OperationalError:	# if db is locked
-				time.sleep(2)			# wait 2 seconds before retry
-				conn.commit()			# This has no handling if the conflict re-occures
-			conn.close()
+			success = False
+			while not success:
+				try:
+					conn.commit()
+					success = True
+				except sqlite3.OperationalError:	# if db is locked
+					time.sleep(2)			# wait 2 seconds before retry
+				conn.close()
 
 
 def data_line(subject, unit=""): 
