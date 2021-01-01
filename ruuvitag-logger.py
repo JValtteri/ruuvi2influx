@@ -256,7 +256,7 @@ def handle_data(found_data):
 					success = True
 				except sqlite3.OperationalError:	# if db is locked
 					time.sleep(2)			# wait 2 seconds before retry
-				conn.close()
+			conn.close()
 
 
 def data_line(subject, unit=""): 
