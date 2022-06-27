@@ -17,7 +17,8 @@ import time
 import yaml
 import queue
 from sender import Sender
-from logging import log
+# from logging import log
+from logger import Logger
 logger = Logger(__name__)
 
 class Configuration():
@@ -30,15 +31,15 @@ class Configuration():
 
 		# list all your tags [MAC, TAG_NAME]
 		self.tags = config['tags']
-		self.queue_depth = self.settings["event_queue"]
+		self.queue_depth = config["event_queue"]
 
 		self.db = config['db'] # Enable or disable database saving True/False
 
-		self.db_name = config["db_name"]
-		self.db_user = config["db_user"]
-		self.db_password = config["db_password"]
-		self.host = config["db_host"]
-		self.port = config["db_port"]
+		# self.db_name = config["db_name"]
+		# self.db_user = config["db_user"]
+		# self.db_password = config["db_password"]
+		# self.host = config["db_host"]
+		# self.port = config["db_port"]
 
 
 	def readConfig(self):
@@ -65,7 +66,7 @@ class Handler():
 
 	def __init__(self, config):
 
-		self.event_queue = queue.Queue(self.queue_depth)
+		self.event_queue = queue.Queue(config.queue_depth)
 		self.body = [
 		{
 		    "tags": {

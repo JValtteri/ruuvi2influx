@@ -13,6 +13,8 @@ sample_interval: 60 # seconds
 # browser, you should consider a sample_interval of of 900 (15 min)
 # or even up to 3600 (1 hour), to improve page loading speed.
 
+event_queue: 15000
+
 # INFLUX_DB
 db: True                                        # Enable or disable database
 db_name: ruuvitags
