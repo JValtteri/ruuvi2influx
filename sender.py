@@ -71,8 +71,10 @@ class Sender(threading.Thread):
         message = self.body
         message[0]["tags"]["name"] = item["name"]
         message[0]["tags"]["mac"] = item["mac"]
-        message[0]["tags"]["target"] = item["target"]
-        message[0]["fields"]["value"] = item["value"]
+        message[0]["fields"]["temperature"] = item["temperature"]
+        message[0]["fields"]["pressure"] = item["pressure"]
+        message[0]["fields"]["humidity"] = item["humidity"]
+        message[0]["fields"]["voltage"] = item["voltage"]
         message[0]["time"] = round(item["time"])
 
         return message

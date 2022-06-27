@@ -35,11 +35,11 @@ class Configuration():
 
 		self.db = config['db'] # Enable or disable database saving True/False
 
-		# self.db_name = config["db_name"]
-		# self.db_user = config["db_user"]
-		# self.db_password = config["db_password"]
-		# self.host = config["db_host"]
-		# self.port = config["db_port"]
+		self.db_name = config["db_name"]
+		self.db_user = config["db_user"]
+		self.db_password = config["db_password"]
+		self.host = config["db_host"]
+		self.port = config["db_port"]
 
 
 	def readConfig(self):
@@ -68,18 +68,21 @@ class Handler():
 
 		self.event_queue = queue.Queue(config.queue_depth)
 		self.body = [
-		{
-		    "tags": {
-		        "target": "",
-		        "name": "Test",
-		        "id": "0",
-		        "location": "Test"
-		    },
-		    "time": 0,
-		    "fields": {
-		        "value": 1
-		    }
-		}
+			{
+				"tags": {
+					"target": "",
+					"name": "Test",
+					"id": "0",
+					"location": "Test"
+				},
+				"time": 0,
+				"fields": {
+					"temperature": None,
+					"pressure": None,
+					"humidity": None,
+					"voltage": None
+				}
+			}
 		]
 
 		self.db_name = config.db_name
