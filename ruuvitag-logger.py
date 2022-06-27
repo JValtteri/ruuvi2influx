@@ -17,6 +17,7 @@ import time
 import yaml
 import queue
 from sender import Sender
+from logging import log
 logger = Logger(__name__)
 
 class Configuration():
