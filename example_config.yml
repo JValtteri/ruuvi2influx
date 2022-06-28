@@ -20,7 +20,7 @@ db: True                                        # Enable or disable database
 db_name: ruuvitags
 db_user: sensor
 db_password: password
-db_host: 0.0.0.0
+db_host: 127.0.0.1
 db_port: 8086
 
 # SCREEN
