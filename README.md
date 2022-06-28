@@ -73,8 +73,14 @@ screen -S logger -d -m python3 ruuvitag-logger.py
 
 ## Run as a docker container
 
+Debian (working)
 ```bash
-$ docker run --net=host --cap-add=NET_ADMIN --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly ruuvitag-logger-py-deb
+$ docker run --net=host --cap-add=NET_ADMIN --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly ruuvitag-logger-py:debian
+```
+
+Alpine (in-progress, not working)
+```bash
+$ docker run --net=host --cap-add=NET_ADMIN --mount type=bind,source="$(pwd)"/config.yml,target=/usr/src/app/config.yml,readonly ruuvitag-logger-py:alpine
 ```
 
 ### Docker images
