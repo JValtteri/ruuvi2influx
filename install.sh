@@ -8,7 +8,7 @@ echo "Installing pip3"
 sudo apt-get -y install python3-pip
 
 echo "Updating pip"
-pip3 install --upgrade pip
+sudo pip3 install --upgrade pip
 
 echo "Installing requirements"
-pip3 install -r requirements.txt
+sudo pip3 install --no-cache-dir -r requirements.txt
