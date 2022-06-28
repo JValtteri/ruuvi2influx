@@ -1,19 +1,17 @@
 # syntax=docker/dockerfile:1
-# Custom RPiZero compatible image
-#FROM python:3-alpine
 FROM python:3.10.5-alpine3.16
 ENV TZ=Europe/Helsinki
 
 WORKDIR /usr/src/app
 
-COPY requirements.txt requirements.txt
-COPY install.sh install.sh
+COPY requirements_minimal.txt requirements.txt
+RUN apk update
+RUN apk add bluez
+RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN chmod +x install.sh
-RUN install.sh
-
-COPY *.py .
+COPY *.py ./
 COPY LICENSE .
 COPY README.md .
 
-ENTRYPOINT [ "sudo", "python3", " ruuvitag-logger.py" ]
+ENTRYPOINT [ "python3", "ruuvitag-logger.py" ]
