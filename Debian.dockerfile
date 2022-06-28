@@ -18,7 +18,7 @@ COPY requirements_minimal.txt requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN apt-get -y install bluez
 RUN apt-get -y install bluez-hcidump
-RUN apt-get -y install bluez-deprecated
+# RUN apt-get -y install bluez-deprecated
 
 # Cleanup
 RUN apt-get clean
@@ -28,5 +28,6 @@ COPY *.py ./
 COPY LICENSE .
 COPY README.md .
 COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
-ENTRYPOINT [ "entrypoint.sh"]
+CMD ./entrypoint.sh

@@ -74,7 +74,7 @@ screen -S logger -d -m python3 ruuvitag-logger.py
 ## Run as a docker container
 
 ```bash
-$ docker run -it -v /var/run/dbus/:/var/run/dbus/:z --privileged --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly ruuvitag-logger-py-deb bash
+$ docker run --net=host --cap-add=NET_ADMIN -v /var/run/dbus/:/run/dbus/:z --privileged --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly ruuvitag-logger-py-deb
 ```
 
 ### Docker images
