@@ -116,17 +116,17 @@ class Handler():
 				tag = State.tags[i]
 
 				# Updates the processed values in the Tag object
-				print("")
-				print(datetime.now())
+				logger.info("")
+				logger.info(datetime.now())
 				tag.update()
 				dbData[tag.mac] = {'name': tag.name}
 
 				# Print values to terminal
-				print(title())
-				print(data_line('temp', 'C'))
-				print(data_line('pres', 'hPa'))
-				print(data_line('humi', '%'))
-				print(data_line('batt', 'V'))
+				logger.info(title())
+				logger.info(data_line('temp', 'C'))
+				logger.info(data_line('pres', 'hPa'))
+				logger.info(data_line('humi', '%'))
+				logger.info(data_line('batt', 'V'))
 
 				# Prepare DB Data
 				dbData[tag.mac].update({"temperature": tag.temp})
