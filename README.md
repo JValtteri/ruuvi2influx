@@ -1,5 +1,14 @@
-# RuuviTag-logger
+# RuuviTag-logger (Legacy Version)
+
+### Legacy Note: ###
+This is the **legacy branch** of this project, formerly known as **RuuviTag-logger**, retaining most of the features of the original project. I will not continue to develope this branch.
+
+A new version with only ***influxdb*** support exists. Influxdb is a supperior solution, being more flexible and robust. It requires some extra work to working, but the result is more performant on both server and client side.
+
+---
+
 Log RuuviTags data to SQLite database and Dweet.io and show charts on the RPi's website
+
 
 **Charts demo:** [https://dima.fi/ruuvitag-logger/](https://dima.fi/ruuvitag-logger/)
 
