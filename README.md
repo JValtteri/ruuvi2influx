@@ -1,59 +1,157 @@
-# RuuviTag-logger
-Log RuuviTags data to SQLite database and Dweet.io and show charts on the RPi's website
+# Ruuvi2influx
+**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**
 
-# Work in progress
+**From there, the [visualization](https://play.grafana.org/d/000000012/grafana-play-home?orgId=1) can be done with [Grafana](https://grafana.com/), for example.**
 
-----------
+## Compatability
 
-## Used elements
-  - ~~[Raspberry Pi 3](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/)~~
-  - [Python 3](https://docs.python.org/3.6/)
-  - [RuuviTag Sensor Python Package](https://github.com/ttu/ruuvitag-sensor) by [Tomi Tuhkanen](https://github.com/ttu)
-  - ~~[Flask microframework](http://flask.pocoo.org/)~~
-  - ~~[SQLite 3 database](https://docs.python.org/3.6/library/sqlite3.html#module-sqlite3)~~
-  - [Data processing and interrupts](https://github.com/JValtteri/wstation) by [J.V.Ojala](https://github.com/JValtteri)
+ARMv6, ARMv7, ARM64, x86, AMD64 and others
+
+### Requires: 
+- [Python 3.6+](https://docs.python.org/) or newer
+- Linux OS
+- Bluez
+- [RuuviTag Sensor Python Package](https://github.com/ttu/ruuvitag-sensor) by [Tomi Tuhkanen](https://github.com/ttu)
+- [influxdb-python](https://github.com/influxdata/influxdb-python) library
+- Hardware:
+  - Bluetooth for example integrated in Raspberry Pi Zero W and later
+  - RuuviTags: RuuviTag default RAW-format is used.
+
+## Features ##
+- Listenes to selected RuuviTags
+- Collects:
+  - Temperature
+  - Humidity
+  - Pressure
+  - Voltage
+- Outputs measurements to stdout
+- Send to InfluxDB via HTTP
+- Optional data processing and filtering
+- Configurable with config.yml
+- Docker ready
 
 ## Install
 
 
+### Automatically
 
-## Setup logger
+```
+$ sudo ./install.sh
+```
+
+### Manually
+
+#### Install Python 3 ###
+
+```
+$ sudo apt-get update
+$ sudo apt-get install python3
+$ sudo apt-get install python3-pip
+```
+
+#### Install and Update pip
+```
+sudo apt-get -y install python3-pip
+sudo pip3 install --upgrade pip
+```
+
+#### Install bluez for bluetooth communication
+```
+sudo apt-get install bluez
+sudo apt-get install bluez-hcidump
+```
+#### Install Python libraries
+```
+$ pip3 install -r requirements.txt
+```
+
+-----
+
+## Config ##
 
 Edit `config.yml` file and set desired settings.
 
-List and name your tags:
+| Key    | Default  | Explanation            |
+| ----------------- | - | ------------------ |
+| `"sample_interval"`  | 2 | Time between pings |
+| `"event_queue"`     | 15000 | How meny pings are buffered if network is interrupted. |
+| `"db_name"`         | "db" | The InfluxDB name |
+| `"db_user"`         | "user" | Username to log in to the InfluxDB |
+| `"db_password"`     |   | the InfluxDB password |
+| `"db_host"`         | "localhost" | the address to the InfluxDB. ```!! omit 'https:\\' !!``` |
+| `"db_port"`         | 8086 | Port used to connect to the InfluxDB |
 
-```python
-tags = [
-    ['CC:CA:7E:52:CC:34', '1: Backyard'],
-    ['FB:E1:B7:04:95:EE', '2: Upstairs'],
-    ['E8:E0:C6:0B:B8:C5', '3: Downstairs']
-]
+### Sample Interval
+
+Note: the sample interval effects only the *minimum* time between 
+outputting new datapoints. Listening is constant. If you are building a 
+databace, you may use this to limit the data resolution to a reasonable 
+rate.
+
+The measurements from the sample interval are collected and averaged.
+The result is sent forward to the databace. This reduces databace 
+bloat and makes queries faster.
+
+To turn off filtering and internal processing, set sample_interval to 0. 
+Do this if you have room for a large databace and processing power for 
+large queries and want to controll all the processing your self.
+
+For light weight Raspberry Pi setup, the 60-900 seconds should be fine.
+
+```yaml
+# SAMPLE INTERVAL
+
+sample_interval: 60 # seconds
 ```
 
-Choose a sample rate you wish:
 
-```python
-sample_rate = 60 # seconds
+### EVENT QUEUE
+
+If the connection to the databace is interrupted, how meny measurements 
+should be held in queue, untill connection resumes.
+
+Large queue takes up RAM. When connection resumes, a very large WRITE reaquest 
+may be rejected by the DB.
+
+```yaml
+# EVENT QUEUE
+
+event_queue: 15000
 ```
 
-note, the sample rate effects only the *minimum* time between outputting new datapoints. Listening is constant. If you are building a databace, you may use this to limit the data to a reasonable rate.
+### INFLUX DB
 
-RuuviTag default RAW-format is used.
+Settings for the HTTP connection to your InfluxDB
 
-If you want to save data to local database, enable it:
-
-```python
-db = True # Enable or disable database saving True/False
+```yaml
+# INFLUX DB
+db: True                                        # Enable or disable database
+db_name: ruuvitags
+db_user: sensor
+db_password: password
+db_host: 127.0.0.1
+db_port: 8086
 ```
 
-Set execution rights to the file:
 
-```bash
-$ chmod +x ruuvitag-logger.py
+### RUUVITAGS
+
+List the MAC addresses for your tags and give them names:
+
+```yaml
+# RUUVITAGS
+# List and name your tags
+tags:
+  "CC:CA:7E:52:CC:34": Backyard
+  "FB:E1:B7:04:95:EE": Upstairs
+  "E8:E0:C6:0B:B8:C5": Downstairs
 ```
 
-Now you can try to run it manually:
+-----
+
+## Run ##
+
+Now you can run it manually:
 
 ```bash
 $ ./ruuvitag-logger.py
@@ -61,28 +159,62 @@ OR
 $ python3 ruuvitag-logger.py
 ```
 
-It is recommended to setup a start script utilizing `screen`
+For non-docker setups it is recommended to setup a start script utilizing `screen`
 
 ```bash
 screen -S logger -d -m python3 ruuvitag-logger.py
 ```
 
-## Setup web-server
-
-
-
 ## Run as a docker container
 
-Debian (working)
+### Build
+
+To build a container compatible with your device run
 ```bash
-$ docker run --net=host --cap-add=NET_ADMIN --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly ruuvitag-logger-py:debian
+$ docker build -f Debian.dockerfile --tag ruuvitag-logger-py:debian
 ```
 
-Alpine (in-progress, not working)
+### Run
+Debian based image
 ```bash
-$ docker run --net=host --cap-add=NET_ADMIN --mount type=bind,source="$(pwd)"/config.yml,target=/usr/src/app/config.yml,readonly ruuvitag-logger-py:alpine
+$ docker run -d \
+             --net=host \
+             --cap-add=NET_ADMIN \
+             --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly \
+             ruuvitag-logger-py:debian
 ```
 
-### Docker images
 
-...
+### Light weight Alpine image
+**Planned. Not working as of yet**
+```bash
+$ docker run --net=host \
+             --cap-add=NET_ADMIN \
+             --mount type=bind,source="$(pwd)"/config.yml,target=/usr/src/app/config.yml,readonly \
+             ruuvitag-logger-py:alpine
+```
+
+-------
+
+## Setup InfluxDB
+
+**Official image**
+```
+docker pull influxdb:latest
+```
+
+**PiZero compatible image**
+```
+mendhak/arm32v6-influxdb
+```
+
+## Setup Grafana
+
+**Official image**
+```
+docker pull grafana/grafana
+```
+
+**PiZero compatible image**
+
+???
