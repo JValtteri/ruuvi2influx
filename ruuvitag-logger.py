@@ -76,10 +76,10 @@ class Tag():
 		self._pres = []
 		self._batt = []
 		# The probeable values
-		self.temp = 0
-		self.humi = 0
-		self.pres = 0
-		self.batt = 0
+		self.temp = None
+		self.humi = None
+		self.pres = None
+		self.batt = None
 
 	def add(self, found_data):
 		'''
@@ -101,22 +101,22 @@ class Tag():
 		try:
 			self.temp = round( avg( self._temp ), 2)
 		except ZeroDivisionError:
-			pass	# If no new datapoints exist, don't change the stored value
+			self.temp = None
 
 		try:
 			self.humi = round( avg( self._humi ), 2)
 		except ZeroDivisionError:
-			pass
+			self.humi = None
 
 		try:
 			self.pres = round( avg( self._pres ), 2)
 		except ZeroDivisionError:
-			pass
+			self.pres = None
 
 		try:
 			self.batt = round( avg( self._batt ), 3)
 		except ZeroDivisionError:
-			pass
+			self.batt = None
 
 		self._temp = []
 		self._humi = []
@@ -227,7 +227,7 @@ def handle_data(found_data):
 			dweetData[tag.name+' '+"pressure"] = tag.pres
 			dweetData[tag.name+' '+"humidity"] = tag.humi
 			dweetData[tag.name+' '+"voltage"] = tag.batt
-			
+
 			# Prepare DB Data
 			dbData[tag.mac].update({"temperature": tag.temp})
 			dbData[tag.mac].update({"pressure": tag.pres})
@@ -242,10 +242,20 @@ def handle_data(found_data):
 			# save data to db
 			anow = time.strftime('%Y-%m-%d %H:%M:%S')
 			for mac, content in dbData.items():
-				conn.execute("INSERT INTO sensors (timestamp,mac,name,temperature,humidity,pressure,voltage) \
-					VALUES ('{}', '{}', '{}', '{}', '{}', '{}', {})".\
-					format(anow, mac, content['name'], content['temperature'], content['humidity'], content['pressure'], content['voltage']))
-			conn.commit()
+				if content["temperature"] is not None:
+					conn.execute("INSERT INTO sensors (timestamp,mac,name,temperature,humidity,pressure,voltage) \
+						VALUES ('{}', '{}', '{}', '{}', '{}', '{}', {})".\
+						format(anow, mac, content['name'], content['temperature'], content['humidity'], content['pressure'], content['voltage']))
+				#except sqlite3.OperationalError:
+				else:
+					pass	# Don't write 'None' to db
+			success = False
+			while not success:
+				try:
+					conn.commit()
+					success = True
+				except sqlite3.OperationalError:	# if db is locked
+					time.sleep(2)			# wait 2 seconds before retry
 			conn.close()
 
 
