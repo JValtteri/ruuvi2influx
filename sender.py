@@ -6,7 +6,7 @@
 import time
 import threading
 import copy
-from influxdb import InfluxDBClient
+from influxdb import InfluxDBClient, exceptions
 from logger import Logger
 logger = Logger(__name__)
 
@@ -50,7 +50,7 @@ class Sender(threading.Thread):
             message = copy.deepcopy(self.message_map(item))
             # Adds message to a list to be sent
             messages.append(message[0])
-            logger.info("New ping: {}".format(item))
+            logger.info("New message: {}".format(item))
 
             # Checks if queue has any new events
             queue_size = self.event_queue.qsize()
@@ -68,13 +68,18 @@ class Sender(threading.Thread):
 
     def message_map(self, item):
         '''Maps values in ITEM to message body'''
+        # item = {key: value for (key, value) in _item if value is not None }
         message = self.body
         message[0]["tags"]["name"] = item["name"]
         message[0]["tags"]["mac"] = item["mac"]
-        message[0]["fields"]["temperature"] = item["temperature"]
-        message[0]["fields"]["pressure"] = item["pressure"]
-        message[0]["fields"]["humidity"] = item["humidity"]
-        message[0]["fields"]["voltage"] = item["voltage"]
+        if item["temperature"] != None:
+            message[0]["fields"]["temperature"] = item["temperature"]
+        if item["pressure"] != None:
+            message[0]["fields"]["pressure"] = item["pressure"]
+        if item["humidity"] != None:
+            message[0]["fields"]["humidity"] = item["humidity"]
+        if item["voltage"] != None:
+            message[0]["fields"]["voltage"] = item["voltage"]
         message[0]["time"] = round(item["time"])
 
         return message
@@ -89,11 +94,14 @@ class Sender(threading.Thread):
         while sent is False:
             try:
                 client.write_points(message, time_precision='ms')
-
-            except:
+            except exceptions.InfluxDBClientError as error:
+                logger.error("InfluxDB Error {}".format( str(error) ))
+                logger.error("Retry in 3 s")
+                time.sleep(3)
+            except Exception as error:
                 # Yep! This is ugly, but a failed connection raises a million different exceptions.
                 # Any failure in sendin at this point is a connection error
-                logger.error("Connection Error. Retry in 3 s")
+                logger.error("Connection Error {}. Retry in 3 s".format(str(error)))
                 time.sleep(3)
             else:
                 logger.debug("Send succesful!")
