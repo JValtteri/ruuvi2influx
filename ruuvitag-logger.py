@@ -84,18 +84,13 @@ class Handler():
 		self.event_queue = queue.Queue(config.queue_depth)
 		self.body = [
 			{
+				"measurement": "ruuvitag",
 				"tags": {
-					"target": "",
 					"name": "Test",
-					"id": "0",
-					"location": "Test"
+					'mac': ""
 				},
 				"time": 0,
 				"fields": {
-					"temperature": None,
-					"pressure": None,
-					"humidity": None,
-					"voltage": None
 				}
 			}
 		]
@@ -206,10 +201,10 @@ class Tag():
 		'''
 		Add a new set of values to the Tag object.
 		'''
-		self._temp.append( found_data[1]['temperature'] )
-		self._humi.append( found_data[1]['humidity'] )
-		self._pres.append( found_data[1]['pressure'] )
-		self._batt.append( found_data[1]['battery']/1000 )
+		self._temp.append( float( found_data[1]['temperature'] ) )
+		self._humi.append( float( found_data[1]['humidity'] ) )
+		self._pres.append( float( found_data[1]['pressure'] ) )
+		self._batt.append( float( found_data[1]['battery']/1000 ) )
 
 	def update(self):
 		'''
@@ -222,22 +217,22 @@ class Tag():
 		try:
 			self.temp = round( avg( self._temp ), 2)
 		except ZeroDivisionError:
-			pass	# If no new datapoints exist, don't change the stored value
+			self.temp = None	# If no new datapoints exist, set value to None
 
 		try:
 			self.humi = round( avg( self._humi ), 2)
 		except ZeroDivisionError:
-			pass
+			self.humi = None
 
 		try:
 			self.pres = round( avg( self._pres ), 2)
 		except ZeroDivisionError:
-			pass
+			self.pres = None
 
 		try:
 			self.batt = round( avg( self._batt ), 3)
 		except ZeroDivisionError:
-			pass
+			self.batt = None
 
 		self._temp = []
 		self._humi = []
