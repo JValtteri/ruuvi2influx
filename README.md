@@ -1,38 +1,25 @@
 # RuuviTag-logger
 Log RuuviTags data to SQLite database and Dweet.io and show charts on the RPi's website
 
-**Charts demo:** [https://dima.fi/ruuvitag-logger/](https://dima.fi/ruuvitag-logger/)
+# Work in progress
+
+----------
 
 ## Used elements
-  - [Raspberry Pi 3](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/)
+  - ~~[Raspberry Pi 3](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/)~~
   - [Python 3](https://docs.python.org/3.6/)
   - [RuuviTag Sensor Python Package](https://github.com/ttu/ruuvitag-sensor) by [Tomi Tuhkanen](https://github.com/ttu)
-  - [Flask microframework](http://flask.pocoo.org/)
-  - [SQLite 3 database](https://docs.python.org/3.6/library/sqlite3.html#module-sqlite3)
-  - [Dweet.io - IOT dwitter](https://dweet.io)
-  - [Chart.js](http://www.chartjs.org/)
+  - ~~[Flask microframework](http://flask.pocoo.org/)~~
+  - ~~[SQLite 3 database](https://docs.python.org/3.6/library/sqlite3.html#module-sqlite3)~~
   - [Data processing and interrupts](https://github.com/JValtteri/wstation) by [J.V.Ojala](https://github.com/JValtteri)
 
 ## Install
 
-Create `ruuvitag` folder in pi's home:
-```bash
-$ mkdir /home/pi/ruuvitag
-```
 
-Put files like this:
-
-```bash
-ruuvitag
- |- ruuvitag-logger.py
- |- ruuvitag-web.py
- |- templates
-      |- ruuvitag.html
-```
 
 ## Setup logger
 
-Edit `ruuvitag-logger.py` file and set desired settings.
+Edit `config.yml` file and set desired settings.
 
 List and name your tags:
 
@@ -54,49 +41,22 @@ note, the sample rate effects only the *minimum* time between outputting new dat
 
 RuuviTag default RAW-format is used.
 
-If you want to use Dweet.io, enable it and set Thing name:
-
-```python
-dweet = True # Enable or disable dweeting True/False
-dweetUrl = 'https://dweet.io/dweet/for/' # dweet.io url
-dweetThing = 'myHomeAtTheBeach' # dweet.io thing name
-```
-
-Script will put all Tag's sensors in one dweet for one Thing.
-
-```
-{
-	'TAG_NAME1 temperature': VALUE,
-	'TAG_NAME1 humidity': VALUE,
-	'TAG_NAME1 pressure': VALUE,
-	'TAG_NAME2 temperature': VALUE,
-	'TAG_NAME2 humidity': VALUE,
-	'TAG_NAME2 pressure': VALUE,
-	etc...
-}
-
-```
 If you want to save data to local database, enable it:
 
 ```python
 db = True # Enable or disable database saving True/False
-dbFile = '/home/pi/ruuvitag/ruuvitag.db' # path to db file
 ```
-
-Script will automatically create `ruuvitag.db` file and table for sensor data.
 
 Set execution rights to the file:
 
 ```bash
-$ chmod 755 ruuvitag-logger.py
+$ chmod +x ruuvitag-logger.py
 ```
 
 Now you can try to run it manually:
 
 ```bash
 $ ./ruuvitag-logger.py
-OR
-$ /home/pi/ruuvitag/ruuvitag-logger.py
 OR
 $ python3 ruuvitag-logger.py
 ```
@@ -109,48 +69,20 @@ screen -S logger -d -m python3 ruuvitag-logger.py
 
 ## Setup web-server
 
-Edit `ruuvitag-web.py` file.
 
-Set charting period in days:
 
-```python
-N = 30 # show charts for 30 days
-```
+## Run as a docker container
 
-Set execution rights to the file:
-
+Debian (working)
 ```bash
-$ chmod 755 ruuvitag-web.py
+$ docker run --net=host --cap-add=NET_ADMIN --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly ruuvitag-logger-py:debian
 ```
 
-Now you can try to run it manually with sudo:
-
+Alpine (in-progress, not working)
 ```bash
-$ sudo ./ruuvitag-web.py
-OR
-$ sudo /home/pi/ruuvitag/ruuvitag-web.py
-OR
-$ sudo python3 ruuvitag-web.py
+$ docker run --net=host --cap-add=NET_ADMIN --mount type=bind,source="$(pwd)"/config.yml,target=/usr/src/app/config.yml,readonly ruuvitag-logger-py:alpine
 ```
 
-To run script in background, use nohup:
+### Docker images
 
-```bash
-$ sudo nohup ./ruuvitag-web.py &
-```
-
-OR `screen`
-
-```bash
-screen -S rweb -d -m sudo python3 ruuvitag-web.py
-```
-
-The server's output log will be in `nohup.out` file or accessable on the screen instance.
-
-```bash
-screen -r rweb
-```
-
-Server will listen requests in 80 port as normal web server do. Just open Raspberry's IP address in your browser.
-
-To change page layout or to add more stuff, tinker with `templates/ruuvitag.html` template file.
+...
