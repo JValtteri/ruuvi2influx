@@ -3,19 +3,37 @@
 ######################################
 
 # SAMPLE INTERVAL
+
 sample_interval: 60 # seconds
 
-# If you  require the maximum sample rate, set sample_interval to 0.
-# Then every time a measurement is received, it is passed
-# forward to the ouputs you've specified.
-#
-# If you plan to keep 7 to 30 days worth of graph, and use a mobile
-# browser, you should consider a sample_interval of of 900 (15 min)
-# or even up to 3600 (1 hour), to improve page loading speed.
+# Note: the sample interval effects only the *minimum* time between
+# outputting new datapoints. Listening is constant. If you are building a
+# databace, you may use this to limit the data resolution to a reasonable
+# rate.
+
+# The measurements from the sample interval are collected and averaged.
+# The result is sent forward to the databace. This reduces databace
+# bloat and makes queries faster.
+
+# To turn off filtering and internal processing, set sample_interval to 0.
+# Do this if you have room for a large databace and processing power for
+# large queries and want to controll all the processing your self.
+
+# For light weight Raspberry Pi setup, the 60-900 seconds should be fine.
+
+
+# EVENT QUEUE
 
 event_queue: 15000
 
-# INFLUX_DB
+# If the connection to the databace is interrupted, how meny measurements
+# should be held in queue, untill connection resumes.
+
+# Large queue takes up RAM. When connection resumes, a very large WRITE reaquest
+# may be rejected by the DB.
+
+
+# INFLUX DB
 db: True                                        # Enable or disable database
 db_name: ruuvitags
 db_user: sensor
@@ -23,10 +41,12 @@ db_password: password
 db_host: 127.0.0.1
 db_port: 8086
 
+
 # SCREEN
 column_width: 14  # Column width on screen (14 default)
 
-# list all your tags
+# RUUVITAGS
+# List and name your tags
 tags:
   "CC:CA:7E:52:CC:34": Backyard
   "FB:E1:B7:04:95:EE": Upstairs

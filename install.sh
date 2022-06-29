@@ -2,6 +2,7 @@
 echo "Updating package list"
 sudo apt-get update
 
+sudo apt-get install bluez
 sudo apt-get install bluez-hcidump
 
 echo "Installing pip3"
