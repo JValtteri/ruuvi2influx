@@ -42,6 +42,21 @@ class Configuration():
 		self.port = config["db_port"]
 
 
+		# Startup info
+		logger.info("\nListened macs")
+
+		# Collects initialized tags
+		macs = self.tags
+		for mac in macs:
+			State.tags[mac] = Tag(mac, macs[mac])
+			logger.info(State.tags[mac].mac)
+
+		logger.info("db_name\t" + self.db_name)
+		logger.info("db_user\t" + self.db_user)
+		logger.info("db_host\t" + self.host)
+		logger.info("db_port\t" + str(self.port) )
+
+
 	def readConfig(self):
 		"""
 		Reads the config file and returns the dict of
@@ -85,6 +100,7 @@ class Handler():
 			}
 		]
 
+		self.db = config.db
 		self.db_name = config.db_name
 		self.db_user = config.db_user
 		self.db_password = config.db_password
@@ -134,7 +150,7 @@ class Handler():
 				dbData[tag.mac].update({"humidity": tag.humi})
 				dbData[tag.mac].update({"voltage": tag.batt})
 
-			if config.db:
+			if self.db:
 				# save data to db
 				posix = round( time.time() * 1000 )
 				for mac, content in dbData.items():
@@ -154,6 +170,9 @@ class Handler():
 						self.sender_thread = Sender(self.event_queue, self.body, self.db_name, self.db_user, self.db_password, self.host, self.port)
 						self.sender_thread.daemon=True
 						self.sender_thread.start()
+
+				# Time for sender to finnish
+				time.sleep(1)
 
 
 class State():
@@ -286,14 +305,6 @@ if __name__ == "__main__":
 
 	config = Configuration()
 	handler = Handler(config)
-
-	print("\nListened macs")
-
-	# Collects initialized tags
-	macs = config.tags
-	for mac in macs:
-		State.tags[mac] = Tag(mac, macs[mac])
-		print(State.tags[mac].mac)
 
 	# The recommended way of listening to current Ruuvitags, using interrupts
 	RuuviTagSensor.get_datas(handler.handle_data)

@@ -83,7 +83,7 @@ class Sender(threading.Thread):
     def send(self, message):
         '''Sends the MESSAGE to influxDB'''
         logger.debug("Message: {}".format(message))
-        client = InfluxDBClient(self.host, self.port, self.db_user, self.db_password, database=self.db_name, ssl=True, verify_ssl=True)
+        client = InfluxDBClient(self.host, self.port, self.db_user, self.db_password, database=self.db_name, ssl=False, verify_ssl=False)
 
         sent = False
         while sent is False:
@@ -93,8 +93,8 @@ class Sender(threading.Thread):
             except:
                 # Yep! This is ugly, but a failed connection raises a million different exceptions.
                 # Any failure in sendin at this point is a connection error
-                logger.error("Connection Error. Retry in 1 s")
-                time.sleep(1)
+                logger.error("Connection Error. Retry in 3 s")
+                time.sleep(3)
             else:
                 logger.debug("Send succesful!")
                 sent = True
