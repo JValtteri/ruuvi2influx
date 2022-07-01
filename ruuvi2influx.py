@@ -43,8 +43,9 @@ class Configuration():
 
 
 		# Startup info
-		logger.info("\nListened macs")
-
+		logger.info("")
+		logger.info("Listened macs")
+		logger.info("")
 		# Collects initialized tags
 		tags = self.tags
 		for mac in tags:

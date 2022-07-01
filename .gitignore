@@ -9,3 +9,4 @@ __*
 config.yml
 *.db
 venv/*
+log
