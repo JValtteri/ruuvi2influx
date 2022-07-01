@@ -8,7 +8,7 @@
 
 ARMv6, ARMv7, ARM64, x86, AMD64 and others
 
-### Requires: 
+### Requires:
 - [Python 3.6+](https://docs.python.org/) or newer
 - Linux OS
 - Bluez (requires Linux)
@@ -84,17 +84,17 @@ Edit `config.yml` file and set desired settings.
 
 ### Sample Interval
 
-Note: the sample interval effects only the *minimum* time between 
-outputting new datapoints. Listening is constant. If you are building a 
-databace, you may use this to limit the data resolution to a reasonable 
+Note: the sample interval effects only the *minimum* time between
+outputting new datapoints. Listening is constant. If you are building a
+databace, you may use this to limit the data resolution to a reasonable
 rate.
 
 The measurements from the sample interval are collected and averaged.
-The result is sent forward to the databace. This reduces databace 
+The result is sent forward to the databace. This reduces databace
 bloat and makes queries faster.
 
-To turn off filtering and internal processing, set sample_interval to 0. 
-Do this if you have room for a large databace and processing power for 
+To turn off filtering and internal processing, set sample_interval to 0.
+Do this if you have room for a large databace and processing power for
 large queries and want to controll all the processing your self.
 
 For light weight Raspberry Pi setup, the 60-900 seconds should be fine.
@@ -108,10 +108,10 @@ sample_interval: 60 # seconds
 
 ### EVENT QUEUE
 
-If the connection to the databace is interrupted, how meny measurements 
+If the connection to the databace is interrupted, how meny measurements
 should be held in queue, untill connection resumes.
 
-Large queue takes up RAM. When connection resumes, a very large WRITE reaquest 
+Large queue takes up RAM. When connection resumes, a very large WRITE reaquest
 may be rejected by the DB.
 
 ```yaml
@@ -155,15 +155,20 @@ tags:
 Now you can run it manually:
 
 ```bash
-$ ./ruuvitag-logger.py
+$ ./ruuvi2influx.py
 OR
-$ python3 ruuvitag-logger.py
+$ python3 ruuvi2influx.py
 ```
 
 For non-docker setups it is recommended to setup a start script utilizing `screen`
 
 ```bash
-screen -S logger -d -m python3 ruuvitag-logger.py
+screen -S logger -d -m python3 ruuvi2influx.py
+```
+
+Thre is a ready script for that
+```
+start_logger.sh
 ```
 
 ## Run as a docker container
@@ -178,21 +183,28 @@ $ docker build -f Debian.dockerfile --tag ruuvitag-logger-py:debian
 ### Run
 Debian based image
 ```bash
-$ docker run -d \
-             --net=host \
-             --cap-add=NET_ADMIN \
-             --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly \
-             ruuvitag-logger-py:debian
+$ docker run \
+    -d \
+    --name ruuvi \
+    --restart unless-stopped \
+    --net=host \
+    --cap-add=NET_ADMIN \
+    --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly \
+    ruuvi2influx:latest
 ```
 
 
 ### Light weight Alpine image
 **Planned. Not working as of yet**
 ```bash
-$ docker run --net=host \
-             --cap-add=NET_ADMIN \
-             --mount type=bind,source="$(pwd)"/config.yml,target=/usr/src/app/config.yml,readonly \
-             ruuvitag-logger-py:alpine
+$ docker run
+    -d \
+    --name ruuvi \
+    --restart unless-stopped \
+    --net=host \
+    --cap-add=NET_ADMIN \
+    --mount type=bind,source="$(pwd)"/config.yml,target=/usr/src/app/config.yml,readonly \
+    ruuvi2influx:alpine
 ```
 
 -------
