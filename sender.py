@@ -48,17 +48,18 @@ class Sender(threading.Thread):
 
             item = self.event_queue.get()
             message = copy.deepcopy(self.message_map(item))
-            # Adds message to a list to be sent
-            messages.append(message[0])
-            logger.info("New message: {}".format(item))
+            if message is not None:                                             ########### NEW
+                # Adds message to a list to be sent
+                messages.append(message[0])
+                logger.info("New message: {}".format(item))
 
-            # Checks if queue has any new events
-            queue_size = self.event_queue.qsize()
+                # Checks if queue has any new events
+                queue_size = self.event_queue.qsize()
 
-            # Warns if can't keep up
-            if queue_size > self.queue_warning_threshold and self.queue_warnined == False:
-                self.queue_warnined = True
-                logger.warning("Can't keep up. Large queue: {}".format(queue_size))
+                # Warns if can't keep up
+                if queue_size > self.queue_warning_threshold and self.queue_warnined == False:
+                    self.queue_warnined = True
+                    logger.warning("Can't keep up. Large queue: {}".format(queue_size))
 
         self.queue_warnined = False               # Warning is reset
         logger.debug("Sending")
@@ -69,20 +70,41 @@ class Sender(threading.Thread):
     def message_map(self, item):
         '''Maps values in ITEM to message body'''
         # item = {key: value for (key, value) in _item if value is not None }
-        message = self.body
+        message = copy.deepcopy(self.body)
+
+        logger.debug("sender template:")
+        logger.debug(message)
+
         message[0]["tags"]["name"] = item["name"]
         message[0]["tags"]["mac"] = item["mac"]
+
+        logger.debug("sender message[0]:")
+        logger.debug(message[0])
+
         if item["temperature"] != None:
             message[0]["fields"]["temperature"] = item["temperature"]
+
         if item["pressure"] != None:
             message[0]["fields"]["pressure"] = item["pressure"]
+
         if item["humidity"] != None:
             message[0]["fields"]["humidity"] = item["humidity"]
+
         if item["voltage"] != None:
             message[0]["fields"]["voltage"] = item["voltage"]
+
+        logger.debug("sender message[0]:")
+        logger.debug(message[0])
+
         message[0]["time"] = round(item["time"])
 
-        return message
+        logger.debug("sender message:")
+        logger.debug(message)
+
+        if message[0]["fields"] is not {}:
+            return message
+        if message[0]["fields"] is not {}:
+            return None
 
 
     def send(self, message):

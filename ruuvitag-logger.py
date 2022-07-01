@@ -46,9 +46,14 @@ class Configuration():
 		logger.info("\nListened macs")
 
 		# Collects initialized tags
-		macs = self.tags
-		for mac in macs:
-			State.tags[mac] = Tag(mac, macs[mac])
+		tags = self.tags
+		for mac in tags:
+			# Creates a Tag Object
+			# with properties (mac, name)
+			tag = Tag(mac=mac, name=tags[mac])
+			# Saves a Teg Object in State Object
+			State.tags[mac] = tag
+			# Log the mac-address
 			logger.info(State.tags[mac].mac)
 
 		logger.info("db_name\t" + self.db_name)
@@ -105,69 +110,120 @@ class Handler():
 		self.sender_thread = Sender(self.event_queue, self.body, self.db_name, self.db_user, self.db_password, self.host, self.port)
 		self.sender_thread.daemon=True
 
+
 	def handle_data(self, found_data):
 		# This is the callback that is called every time new data is found
 
-		# add or update fresh data with the found tag
-		if found_data[0] in State.tags:
-			State.tags[found_data[0]].add(found_data)
+		found_mac = found_data[0]
+
+		# If state tags{} has an entry mac: Tag() for found_mac
+		# Appends the found data values to their respevtive lists in the Tag object.
+		if found_mac in State.tags:
+			State.tags[found_mac].add(found_data)
 
 		# Get the time
 		now = datetime.timestamp(datetime.now())
 		time_passed = now - State.last_update_time
 
-		# If the sample window has closed
+		# If the sample window has closed, output the data
+		# Stored in Tag() Objects
 		if time_passed >= config.sample_interval:
 
 			State.last_update_time = now
+			self.outputs()
 
-			dbData = {}
 
-			for i in State.tags:
-				tag = State.tags[i]
+	def outputs(self):
+		'''
+		Outputs the data collected
+		'''
 
-				# Updates the processed values in the Tag object
-				logger.info("")
-				logger.info(datetime.now())
-				tag.update()
-				dbData[tag.mac] = {'name': tag.name}
+		# Create a SET of data
+		dbData = {}
 
-				# Print values to terminal
-				logger.info(title())
-				logger.info(data_line('temp', 'C'))
-				logger.info(data_line('pres', 'hPa'))
-				logger.info(data_line('humi', '%'))
-				logger.info(data_line('batt', 'V'))
+		for tag_mac in State.tags:
+			tag = State.tags[tag_mac]
 
-				# Prepare DB Data
-				dbData[tag.mac].update({"temperature": tag.temp})
-				dbData[tag.mac].update({"pressure": tag.pres})
-				dbData[tag.mac].update({"humidity": tag.humi})
-				dbData[tag.mac].update({"voltage": tag.batt})
+			# Trigger caclulation of the output values:
+			# -> Values collected since last update() are averaged
+			#    and stored, buffers are reset.
+			tag.update()
 
-			if self.db:
-				# save data to db
-				posix = round( time.time() * 1000 )
-				for mac, content in dbData.items():
+			# Create tag with a name
+			dbData[tag.mac] = {'name': tag.name}
 
-					item = content
-					item["mac"] = mac
-					item["time"] = posix
+			# Prepare DB Data
+			dbData[tag.mac].update({
+				"temperature": tag.temp,
+				"pressure": tag.pres,
+				"humidity": tag.humi,
+				"voltage": tag.batt
+				})
 
-					# Put item to queue
-					try:
-						self.event_queue.put(item)
-					except queue.Full:
-						logger.error("queue.FULL")
 
-					# If no thread is active, restart the thread
-					if not self.sender_thread.is_alive():
-						self.sender_thread = Sender(self.event_queue, self.body, self.db_name, self.db_user, self.db_password, self.host, self.port)
-						self.sender_thread.daemon=True
-						self.sender_thread.start()
+		# Print values to terminal
+		self.output_to_screen()
 
-				# Time for sender to finnish
-				time.sleep(1)
+		if self.db:
+			self.output_to_db(dbData)
+
+
+	def output_to_db(self, dbData):
+		"""
+		Re-formats dbData as a flat dictionary
+		Puts the result in send_queue
+		"""
+
+		# This function works, but is ugly.
+		# It does redundant fiddling the data
+		# to be fiddled with again.
+
+		# Save data to db
+		posix = round( time.time() * 1000 )
+		for mac, item in dbData.items():
+
+			item["mac"] = mac
+			item["time"] = posix
+
+			# If any one datapoint value ("temperature") is None
+			# all datapoint values are None
+			if item["temperature"] is not None:
+				# Put item to queue
+				try:
+					self.event_queue.put(item)
+				except queue.Full:
+					logger.error("queue.FULL")
+
+				# If no thread is active, restart the thread
+				if not self.sender_thread.is_alive():
+					self.sender_thread = Sender(self.event_queue, self.body, self.db_name, self.db_user, self.db_password, self.host, self.port)
+					self.sender_thread.daemon=True
+					self.sender_thread.start()
+
+			else:
+				# Do not send datapoints with None values.
+				# InfluxDB can't handle None values or empty {} values
+				pass
+
+		# Time for sender to finnish
+		time.sleep(1)
+
+
+	@staticmethod
+	def output_to_screen():
+		"""
+		Outputs data to screen
+		and/or selected LOG location
+		"""
+		logger.info("")
+		logger.info(datetime.now())
+
+		# Print values to terminal
+		logger.info(title())
+		logger.info(State.data_line('temp', 'C'))
+		logger.info(State.data_line('pres', 'hPa'))
+		logger.info(State.data_line('humi', '%'))
+		logger.info(State.data_line('batt', 'V'))
 
 
 class State():
@@ -175,6 +231,41 @@ class State():
 	last_update_time = datetime.timestamp(datetime.now())
 	# All tags are collected here
 	tags = {}
+
+	def data_line(subject, unit=""):
+		'''
+		Returns data from all sensors of the selected type (subject)
+		formated in a row.
+		Use: print( data_line('pres','hPa') )
+		'''
+		datas = []
+		dline = ""
+		for i in State.tags:
+			tag = State.tags[i]
+			# try:
+			if subject == 'temp':
+				avg_data = tag.temp
+
+			elif subject == 'pres':
+				avg_data = tag.pres
+
+			elif subject == 'humi':
+				avg_data = tag.humi
+
+			elif subject == 'batt':
+				avg_data = tag.batt
+
+			else:
+				logger.critical("Invalid tag subject: '{}', Units:, '{}'".format(subject, unit))
+				raise Exception("Invalid tag subject: '{}'".format(subject))
+
+			# 1.321 + " " + "V"
+			value = str(avg_data) + " " + unit
+			datas.append( value.ljust(config.column_width) )
+
+
+		dline = ''.join(datas)
+		return dline
 
 
 class Tag():
@@ -211,8 +302,8 @@ class Tag():
 		Updates the object stored values with the calculated average of
 		values received since last update.
 		Re-initializes the object to collect a new series of data.
-		If no new datapoints were received, the previous data point is
-		retained.
+
+		If no new datapoints were received, the data point set to None.
 		'''
 		try:
 			self.temp = round( avg( self._temp ), 2)
@@ -238,41 +329,6 @@ class Tag():
 		self._humi = []
 		self._pres = []
 		self._batt = []
-
-
-def data_line(subject, unit=""):
-	'''
-	Returns data from all sensors of the selected type (subject)
-	formated in a row.
-	Use: print( data_line('pres','hPa') )
-	'''
-	datas = []
-	dline = ""
-	for i in State.tags:
-		tag = State.tags[i]
-		# try:
-		if subject == 'temp':
-			avg_data = tag.temp
-
-		elif subject == 'pres':
-			avg_data = tag.pres
-
-		elif subject == 'humi':
-			avg_data = tag.humi
-
-		elif subject == 'batt':
-			avg_data = tag.batt
-
-		else:
-			print(tag, 'foo', subject)
-
-		# 1.321 + " " + "V"
-		value = str(avg_data) + " " + unit
-		datas.append( value.ljust(config.column_width) )
-
-
-	dline = ''.join(datas)
-	return dline
 
 
 def title():
@@ -302,4 +358,7 @@ if __name__ == "__main__":
 	handler = Handler(config)
 
 	# The recommended way of listening to current Ruuvitags, using interrupts
-	RuuviTagSensor.get_datas(handler.handle_data)
+	try:
+		RuuviTagSensor.get_datas(handler.handle_data)
+	except KeyboardInterrupt:
+		logger.info("KeyboardInterrupt: Exiting")
