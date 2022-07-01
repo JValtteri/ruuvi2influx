@@ -28,7 +28,7 @@ class Logger():
         self.stream_handler = logging.StreamHandler()
 
         # Set handler levels
-        self.stream_handler.setLevel(logging.INDO)
+        self.stream_handler.setLevel(logging.INFO)
         # self.file_handler.setLevel(logging.INFO)
 
         # Set log format
