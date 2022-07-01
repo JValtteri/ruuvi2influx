@@ -177,7 +177,7 @@ start_logger.sh
 
 To build a container compatible with your device run
 ```bash
-$ docker build -f Debian.dockerfile --tag ruuvitag-logger-py:debian
+$ docker build -f Debian.dockerfile --tag ruuvi2influx:debian
 ```
 
 ### Run
