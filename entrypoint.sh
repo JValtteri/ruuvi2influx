@@ -12,4 +12,4 @@ sleep=5
 # sudo hciconfig hci0 down
 # sudo hciconfig hci0 up
 
-python3 ruuvitag-logger.py
+python3 ruuvi2influx.py
