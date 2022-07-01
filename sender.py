@@ -48,10 +48,10 @@ class Sender(threading.Thread):
 
             item = self.event_queue.get()
             message = copy.deepcopy(self.message_map(item))
-            if message is not None:                                             ########### NEW
+            if message is not None:
                 # Adds message to a list to be sent
                 messages.append(message[0])
-                logger.info("New message: {}".format(item))
+                logger.debug("New message: {}".format(item))
 
                 # Checks if queue has any new events
                 queue_size = self.event_queue.qsize()
@@ -64,6 +64,7 @@ class Sender(threading.Thread):
         self.queue_warnined = False               # Warning is reset
         logger.debug("Sending")
         self.send( messages )
+        logger.debug("Sent")
         logger.debug("Sender thread CLOSED")
 
 
@@ -72,14 +73,8 @@ class Sender(threading.Thread):
         # item = {key: value for (key, value) in _item if value is not None }
         message = copy.deepcopy(self.body)
 
-        logger.debug("sender template:")
-        logger.debug(message)
-
         message[0]["tags"]["name"] = item["name"]
         message[0]["tags"]["mac"] = item["mac"]
-
-        logger.debug("sender message[0]:")
-        logger.debug(message[0])
 
         if item["temperature"] != None:
             message[0]["fields"]["temperature"] = item["temperature"]
@@ -93,13 +88,7 @@ class Sender(threading.Thread):
         if item["voltage"] != None:
             message[0]["fields"]["voltage"] = item["voltage"]
 
-        logger.debug("sender message[0]:")
-        logger.debug(message[0])
-
         message[0]["time"] = round(item["time"])
-
-        logger.debug("sender message:")
-        logger.debug(message)
 
         if message[0]["fields"] is not {}:
             return message
@@ -107,24 +96,23 @@ class Sender(threading.Thread):
             return None
 
 
-    def send(self, message):
+    def send(self, message, retry_time=3):
         '''Sends the MESSAGE to influxDB'''
         logger.debug("Message: {}".format(message))
         client = InfluxDBClient(self.host, self.port, self.db_user, self.db_password, database=self.db_name, ssl=False, verify_ssl=False)
-
         sent = False
         while sent is False:
             try:
                 client.write_points(message, time_precision='ms')
             except exceptions.InfluxDBClientError as error:
                 logger.error("InfluxDB Error {}".format( str(error) ))
-                logger.error("Retry in 3 s")
-                time.sleep(3)
+                logger.error("Retry in 3 s").format(retry_time)
+                time.sleep(retry_time)
             except Exception as error:
                 # Yep! This is ugly, but a failed connection raises a million different exceptions.
                 # Any failure in sendin at this point is a connection error
-                logger.error("Connection Error {}. Retry in 3 s".format(str(error)))
-                time.sleep(3)
+                logger.error("Connection Error {}. Retry in {} s".format(str(error)), retry_time)
+                time.sleep(retry_time)
             else:
                 logger.debug("Send succesful!")
                 sent = True
