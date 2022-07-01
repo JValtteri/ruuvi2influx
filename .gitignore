@@ -1,7 +1,6 @@
 # Ignore this
 *.pyc
 *.pdf
-*.txt
 __*
 *_test
 .vscode

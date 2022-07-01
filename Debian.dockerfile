@@ -14,7 +14,7 @@ RUN apt-get -y install python3-pip
 RUN pip3 install --upgrade pip
 
 # Install requirements
-COPY requirements_minimal.txt requirements.txt
+COPY requirements.txt requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN apt-get -y install bluez
 RUN apt-get -y install bluez-hcidump

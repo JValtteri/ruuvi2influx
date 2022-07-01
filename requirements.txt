@@ -1,0 +1,4 @@
+influxdb>=5.3.1
+PyYAML>=6.0
+requests>=2.0.0
+ruuvitag-sensor>=1.2.1
