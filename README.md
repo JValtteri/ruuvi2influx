@@ -1,7 +1,8 @@
 # Ruuvi2influx
 **Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**
-
 **From there, the [visualization](https://play.grafana.org/d/000000012/grafana-play-home?orgId=1) can be done with [Grafana](https://grafana.com/), for example.**
+
+**For [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) version with MySQL and Dweet support, see the [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) branch**
 
 ## Compatability
 
@@ -10,11 +11,11 @@ ARMv6, ARMv7, ARM64, x86, AMD64 and others
 ### Requires: 
 - [Python 3.6+](https://docs.python.org/) or newer
 - Linux OS
-- Bluez
+- Bluez (requires Linux)
 - [RuuviTag Sensor Python Package](https://github.com/ttu/ruuvitag-sensor) by [Tomi Tuhkanen](https://github.com/ttu)
 - [influxdb-python](https://github.com/influxdata/influxdb-python) library
 - Hardware:
-  - Bluetooth for example integrated in Raspberry Pi Zero W and later
+  - Bluetooth for example integrated in Raspberry **Pi Zero W** and later
   - RuuviTags: RuuviTag default RAW-format is used.
 
 ## Features ##
@@ -217,4 +218,6 @@ docker pull grafana/grafana
 
 **PiZero compatible image**
 
-???
+There doesn't seem to be any reasonably up-to-date version compatible with Raspberry Pi Zero W (ARMv6). It is recommended to use a **Pi 3** or newer for hosting **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
+
+I may yet try to build a Zero compatible image, but since I have a working image on another Pi, the incentive for me is low right now.
