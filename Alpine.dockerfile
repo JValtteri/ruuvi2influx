@@ -4,14 +4,28 @@ ENV TZ=Europe/Helsinki
 
 WORKDIR /usr/src/app
 
-COPY requirements_minimal.txt requirements.txt
+# Update
 RUN apk update
-RUN apk add bluez-deprecated
-RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN apk upgrade
+
+# Python3
+# Python3 already installed
+RUN pip install --upgrade pip
+# RUN /usr/local/bin/python -m pip install --upgrade pip
+
+# Install requirements
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+RUN apk add bluez-hcidump
+RUN apk add bluez-deprecated
+
+# Cleanup
+RUN apk clean
 
 COPY *.py ./
 COPY LICENSE .
 COPY README.md .
+COPY alpine_entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
 
-# ENTRYPOINT [ "python3", "ruuvitag-logger.py" ]
+CMD ./entrypoint.sh
