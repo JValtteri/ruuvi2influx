@@ -4,11 +4,34 @@
 
 **For [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) version with MySQL and Dweet support, see the [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) branch**
 
+## Table of contents
+
+- [Compatability](#compatability)
+  - [Requirements](#requirements)
+- [Features](#features)
+- [Install](#install)
+  - [Automatically](#automatically)
+  - [Manually](#manually)
+- [Config](#config)
+  - [Sample Interval](#sample-interval)
+  - [Event Queue](#event-queue)
+  - [InfluxDB](#influxdb)
+  - [Ruuvitags](#ruuvitags)
+- [Run](#run)
+  - [Run as a docker container](#run-as-a-docker-container)
+    - [Build](#build)
+    - [Run](#run-1)
+- [Appendix](#appendix)
+  - [Setup InfluxDB](#setup-influxdb)
+  - [Setup Grafana](#setup-grafana)
+
+---------
+
 ## Compatability
 
 ARMv6, ARMv7, ARM64, x86, AMD64 and others
 
-### Requires:
+### Requirements:
 - [Python 3.6+](https://docs.python.org/) or newer
 - Linux OS
 - Bluez (requires Linux)
@@ -106,7 +129,7 @@ sample_interval: 60 # seconds
 ```
 
 
-### EVENT QUEUE
+### Event Queue
 
 If the connection to the databace is interrupted, how meny measurements
 should be held in queue, untill connection resumes.
@@ -120,7 +143,7 @@ may be rejected by the DB.
 event_queue: 15000
 ```
 
-### INFLUX DB
+### InfluxDB
 
 Settings for the HTTP connection to your InfluxDB
 
@@ -135,7 +158,7 @@ db_port: 8086
 ```
 
 
-### RUUVITAGS
+### Ruuvitags
 
 List the MAC addresses for your tags and give them names:
 
@@ -171,16 +194,16 @@ Thre is a ready script for that
 start_logger.sh
 ```
 
-## Run as a docker container
+### Run as a docker container
 
-### Build
+#### Build
 
 To build a container compatible with your device run
 ```bash
 $ docker build -f Debian.dockerfile --tag ruuvi2influx .
 ```
 
-### Run
+#### Run
 Debian based image
 ```bash
 $ docker run \
@@ -194,8 +217,8 @@ $ docker run \
 ```
 
 
-### Light weight Alpine image
-**Planned. Not working as of yet**
+#### Light weight Alpine image
+Planned. Not tested as of yet
 ```bash
 $ docker run
     -d \
@@ -209,26 +232,28 @@ $ docker run
 
 -------
 
-## Setup InfluxDB
+## Appendix
 
-**Official image**
+### Setup InfluxDB
+
+#### Official image
 ```
 docker pull influxdb:latest
 ```
 
-**PiZero compatible image**
+#### PiZero compatible image
 ```
 mendhak/arm32v6-influxdb
 ```
 
-## Setup Grafana
+### Setup Grafana
 
-**Official image**
+#### Official image
 ```
 docker pull grafana/grafana
 ```
 
-**PiZero compatible image**
+#### PiZero compatible image
 
 There doesn't seem to be any reasonably up-to-date version compatible with Raspberry Pi Zero W (ARMv6). It is recommended to use a **Pi 3** or newer for hosting **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
 
