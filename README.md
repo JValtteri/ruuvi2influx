@@ -83,7 +83,9 @@ Dedicated docker page: *https://hub.docker.com/r/jvaltteri/ruuvi2influx*
 
 ### Configure
 
-Create a `config.yml` in the same directroy, where you'll be starting the container from. You can use the example_config.yml as a template.
+Create a `config.yml` in the same directroy, where you'll be starting the container from. 
+
+You can use the [**example_config.yml**](example_config.yml) as a template.
 See [**Config**](#config) section for detais.
 
 ### Run the ready image
