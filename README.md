@@ -1,15 +1,20 @@
 # Ruuvi2influx
-**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**
-**From there, the [visualization](https://play.grafana.org/d/000000012/grafana-play-home?orgId=1) can be done with [Grafana](https://grafana.com/), for example.**
+**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).** 
 
-**For [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) version with MySQL and Dweet support, see the [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) branch**
+**For Docker implementation see [**Docker Version**](#docker-version)**
 
 ## Table of contents
 
 - [Compatability](#compatability)
-  - [Requirements](#requirements)
+  - [Hardware](#hardware-requirements)
+  - [Software Requirements](#software-requirements-for-local-instals)
 - [Features](#features)
-- [Install](#install)
+- [**Docker Version**](#docker-version)
+  - [Pull Docker Image](#pull-docker-image)
+  - [Configure](#configure)
+  - [Run the ready image](#run-the-ready-image)
+  - [or Build the image yourself](#or-build-the-image-yourself)
+- [**Install locally**](#install-locally)
   - [Automatically](#automatically)
   - [Manually](#manually)
 - [Config](#config)
@@ -18,9 +23,6 @@
   - [InfluxDB](#influxdb)
   - [Ruuvitags](#ruuvitags)
 - [Run](#run)
-  - [Run as a docker container](#run-as-a-docker-container)
-    - [Build](#build)
-    - [Run](#run-1)
 - [Appendix](#appendix)
   - [Setup InfluxDB](#setup-influxdb)
   - [Setup Grafana](#setup-grafana)
@@ -29,17 +31,23 @@
 
 ## Compatability
 
-ARMv6, ARMv7, ARM64, x86, AMD64 and others
+| **OS:** | Linux |
+| :-- | :-- |
+| **Architecture:** | ARMv6, ARMv7, ARM64, x86, AMD64 and others |
 
-### Requirements:
+**Docker images may not be available for all platforms, but can be built with the included script.*
+
+### Hardware Requirements ###
+
+- Bluetooth for example integrated in Raspberry **Pi Zero W** and later
+- RuuviTags: RuuviTag default RAW-format is used. 
+
+### Software Requirements for Local Instals:
 - [Python 3.6+](https://docs.python.org/) or newer
 - Linux OS
 - Bluez (requires Linux)
 - [RuuviTag Sensor Python Package](https://github.com/ttu/ruuvitag-sensor) by [Tomi Tuhkanen](https://github.com/ttu)
 - [influxdb-python](https://github.com/influxdata/influxdb-python) library
-- Hardware:
-  - Bluetooth for example integrated in Raspberry **Pi Zero W** and later
-  - RuuviTags: RuuviTag default RAW-format is used.
 
 ## Features ##
 - Listenes to selected RuuviTags
@@ -52,10 +60,50 @@ ARMv6, ARMv7, ARM64, x86, AMD64 and others
 - Send to InfluxDB via HTTP
 - Optional data processing and filtering
 - Configurable with config.yml
-- Docker ready
+- [Docker ready](#docker-version)
 
-## Install
+---------
 
+## Docker Version
+
+- Use the [ready image](https://hub.docker.com/r/jvaltteri/ruuvi2influx) from DockerHub or 
+- build your own with the included [script](#or-build-the-image-yourself).
+
+*At the time of writing, the ready image is only for* **ARM32v6** *(Rasapberry Pi Zero).*
+
+### Pull Docker Image
+
+```docker pull jvaltteri/ruuvi2influx```
+
+### Configure
+
+Create a `config.yml` in the same directroy, where you'll be starting the container from. YOu can use the example_config.yml as a template.
+See [**Config**](#config) section for detais.
+
+### Run the ready image
+
+Debian based image
+```bash
+$ docker run \
+    -d \
+    --name ruuvi \
+    --restart unless-stopped \
+    --net=host \
+    --cap-add=NET_ADMIN \
+    --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly \
+    ruuvi2influx:latest
+```
+
+### or Build the image yourself
+
+To build a container compatible with your device run
+```bash
+$ docker build -f Debian.dockerfile --tag ruuvi2influx .
+```
+
+---------
+
+## Install locally
 
 ### Automatically
 
@@ -194,45 +242,13 @@ Thre is a ready script for that
 start_logger.sh
 ```
 
-### Run as a docker container
-
-#### Build
-
-To build a container compatible with your device run
-```bash
-$ docker build -f Debian.dockerfile --tag ruuvi2influx .
-```
-
-#### Run
-Debian based image
-```bash
-$ docker run \
-    -d \
-    --name ruuvi \
-    --restart unless-stopped \
-    --net=host \
-    --cap-add=NET_ADMIN \
-    --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly \
-    ruuvi2influx:latest
-```
-
-
-#### Light weight Alpine image
-Planned. Not tested as of yet
-```bash
-$ docker run
-    -d \
-    --name ruuvi \
-    --restart unless-stopped \
-    --net=host \
-    --cap-add=NET_ADMIN \
-    --mount type=bind,source="$(pwd)"/config.yml,target=/usr/src/app/config.yml,readonly \
-    ruuvi2influx:alpine
-```
-
 -------
 
 ## Appendix
+
+The **influxdb** needs to be [installed](#setup-influxdb) seperately. If you don't already have a system for [visualizing](https://play.grafana.org/d/000000012/grafana-play-home?orgId=1) the data. I recommend [Grafana](https://grafana.com/). 
+
+For [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) version with MySQL and Dweet support, see the [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) branch
 
 ### Setup InfluxDB
 
@@ -255,6 +271,6 @@ docker pull grafana/grafana
 
 #### PiZero compatible image
 
-There doesn't seem to be any reasonably up-to-date version compatible with Raspberry Pi Zero W (ARMv6). It is recommended to use a **Pi 3** or newer for hosting **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
+There doesn't seem to be any reasonably up-to-date Grafana version compatible with Raspberry Pi Zero W (ARMv6). It is recommended to use a **Pi 3** or newer for hosting **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
 
 I may yet try to build a Zero compatible image, but since I have a working image on another Pi, the incentive for me is low right now.
