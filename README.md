@@ -10,7 +10,7 @@
   - [Software Requirements](#software-requirements-for-local-instals)
 - [Features](#features)
 - [**Docker Version**](#docker-version)
-  - [Pull Docker Image](#pull-docker-image)
+  - [Pull The Docker Image](#pull-the-docker-image)
   - [Configure](#configure)
   - [Run the ready image](#run-the-ready-image)
   - [or Build the image yourself](#or-build-the-image-yourself)
@@ -66,18 +66,24 @@
 
 ## Docker Version
 
-- Use the [ready image](https://hub.docker.com/r/jvaltteri/ruuvi2influx) from DockerHub or 
-- build your own with the included [script](#or-build-the-image-yourself).
+Dedicated docker page: *https://hub.docker.com/r/jvaltteri/ruuvi2influx*
 
-*At the time of writing, the ready image is only for* **ARM32v6** *(Rasapberry Pi Zero).*
+### Table of contents
 
-### Pull Docker Image
+- [Pull The Docker Image](#pull-the-docker-image)
+- [Configure](#configure)
+- [Run the ready image](#run-the-ready-image)
+- [or Build the image yourself](#or-build-the-image-yourself)
+
+### Pull The Docker Image
 
 ```docker pull jvaltteri/ruuvi2influx```
 
+*At the time of writing, the ready image is only for* **ARM32v6** *(Rasapberry Pi Zero).*
+
 ### Configure
 
-Create a `config.yml` in the same directroy, where you'll be starting the container from. YOu can use the example_config.yml as a template.
+Create a `config.yml` in the same directroy, where you'll be starting the container from. You can use the example_config.yml as a template.
 See [**Config**](#config) section for detais.
 
 ### Run the ready image
