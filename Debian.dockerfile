@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.1.5
 FROM debian:bullseye-slim
 ENV TZ=Europe/Helsinki
 
