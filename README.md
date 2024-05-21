@@ -1,7 +1,9 @@
 # Ruuvi2influx
-**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).** 
+**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**  
 
 **For Docker implementation see [**Docker Version**](#docker-version)**
+
+Influx database needs to be set up separately. I recommend the official [influxdb](https://hub.docker.com/_/influxdb) docker image or the unofficial [mendhak/arm32v6-influxdb](https://hub.docker.com/search?q=mendhak%2Farm32v6-influxdb) for Pi Zero setups. Instructions for the full deployment can be found in [ruuvitags-raspberrypi-zero](https://github.com/JValtteri/ruuvitags-raspberrypi-zero) repository.
 
 ## Table of contents
 
@@ -67,6 +69,8 @@
 ## Docker Version
 
 Dedicated docker page: *https://hub.docker.com/r/jvaltteri/ruuvi2influx*
+
+Instructions for setting up everything else: [ruuvitags-raspberrypi-zero](https://github.com/JValtteri/ruuvitags-raspberrypi-zero)
 
 ### Table of contents
 
