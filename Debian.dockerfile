@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.1.5
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 ENV TZ=Europe/Helsinki
 
 WORKDIR /app
