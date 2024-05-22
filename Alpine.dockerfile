@@ -1,5 +1,5 @@
-# syntax=docker/dockerfile:1
-FROM python:3.10.5-alpine3.16
+# syntax=docker/dockerfile:1.1.5
+FROM python:3.10.14-alpine
 ENV TZ=Europe/Helsinki
 
 WORKDIR /usr/src/app
