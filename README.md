@@ -5,7 +5,7 @@
 
 **For Docker implementation see [**Docker Version**](#docker-version)**
 
-Influx database needs to be set up separately. I recommend the official [influxdb](https://hub.docker.com/_/influxdb) docker image for platforms that support it, or an unofficial [mendhak/arm32v6-influxdb](https://hub.docker.com/search?q=mendhak%2Farm32v6-influxdb) for Pi Zero setups. Instructions for a full deployment can be found in [ruuvitags-raspberrypi-zero](https://github.com/JValtteri/ruuvitags-raspberrypi-zero) repository.
+Influx database needs to be set up separately. I recommend the official [influxdb](https://hub.docker.com/_/influxdb) docker image for platforms that support it. Instructions for a full deployment can be found under [Example Setup](#example-setup) or more detailed, but old and cluttered instructions in[ruuvitags-raspberrypi-zero](https://github.com/JValtteri/ruuvitags-raspberrypi-zero) repository.
 
 ## Table of contents
 
@@ -76,13 +76,13 @@ Docker images are now built automatically usign GitHub actions.
 
 Stable images are published on release:
 ```
-ghcr.io/JValtteri/ruuvi2influx:latest
-ghcr.io/JValtteri/ruuvi2influx:{version number}
+ghcr.io/jvaltteri/ruuvi2influx:latest
+ghcr.io/jvaltteri/ruuvi2influx:{version number}
 ```
 
 Tip of `master` branch is published as `dev`:
 ```
-ghcr.io/JValtteri/ruuvi2influx:dev
+ghcr.io/jvaltteri/ruuvi2influx:dev
 ```
 
 Old docker hub page for `arm/v6` image: *https://hub.docker.com/r/jvaltteri/ruuvi2influx*. Using the outdated image is not recommended. It's better to [install on bare metal](#install-locally).
@@ -248,13 +248,13 @@ The **influxdb** needs to be [installed](#setup-influxdb) seperately. If you don
 
 For [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) version with MySQL and Dweet support, see the [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) branch
 
-### Setup InfluxDB
+### PiZero compatible images
 
-#### Official image
-```
-docker pull influxdb:1.8
-```
-*Influxdb is now on version 3. `:latest` tag will soon point to it, therefore version `1.x` must be explicitly defined.*
+There are no longer any Raspberry Pi Zero W (ARMv6) compatible images for `influxdb`, nor `grafana`. It's recommended to use a **Pi 3** or newer for hosting **Influxdb-v1** and **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
+
+### Example setup
+
+#### `docker-compose.yml`
 
 Here is a docker compose for running Influxdb v1.8
 
@@ -281,22 +281,53 @@ services:
     ## UID/GID = 1500:1500
 
     restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_NAME=Koti
+
+    restart: unless-stopped
 ```
 
-#### PiZero compatible image
-```
-mendhak/arm32v6-influxdb
-```
-**This image is very out of date and not recommended anymore.**
-Install the database on a supported platform instead.
+#### Setting everything up
 
-### Setup Grafana
+- You need to configure the database (`influxdb.conf`)
+    - `sudo docker run --rm influxdb:[version] influxd config > influxdb.conf.default`
+    - `[data]` / `cache-max-memory-size` = `"512m"`
+        - Limits the amount of memory influxdb will allocate to itself
+    - `[data]` / `max-concurrent-compactions` = `2`
+        - Use max two cores to perform compactions
+    - `[monitor]` / `store-enabled` = `false`
+        - Disables internal monitoring. This causes a lot of performance
+          issues on Raspberry when enabled:
+          <https://github.com/influxdata/influxdb/issues/9475>
 
-#### Official image
-```
-docker pull grafana/grafana
-```
-
-#### PiZero compatible image
-
-There are no longer any Raspberry Pi Zero W (ARMv6) compatible images for `influxdb`, nor `grafana`. It's recommended to use a **Pi 3** or newer for hosting **Influxdb-v1** and **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
+- Create user `influxdb:influxdb` and set permissions
+    - `chown -R influxdb:influxdb influxdbdata`
+    - `chown -R influxdb:influxdb influxdbmeta`
+- You need to setup the database (enter bunch of commands)
+    - `docker exec -it influxdb /bin/ash`
+    - `CREATE USER admin WITH PASSWORD '[admin_password]' WITH ALL PRIVILEGES`
+    - `CREATE DATABASE "ruuvitags"`
+    - `CREATE USER "sensor" WITH PASSWORD '[write_password]'`
+    - `CREATE USER "grafana" WITH PASSWORD '[read_password]'`
+    - `GRANT WRITE ON ruuvitags TO sensor`
+    - `GRANT READ ON ruuvitags TO grafana`
+- In Grafana, go to **Connections > Data sources**
+    - Query language: `InfluxQL`
+    - URL: `http://[influxdb IP]:8086`
+    - Basic auth: `enable`
+        - User: `grafana`
+        - Password: `[read_password]`
+    - Database: `ruuvitags`
+    - User: `grafana`
+    - Password: `[read_password]`
+    - HTTP Method: `POST`
+- Create a custom Dashboard in Grafana
