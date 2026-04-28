@@ -15,7 +15,6 @@ Influx database needs to be set up separately. I recommend the official [influxd
 - [Features](#features)
 - [**Docker Version**](#docker-version)
   - [Configure](#configure)
-  - [Run the ready image](#run-the-ready-image)
   - [or Build the image yourself](#or-build-the-image-yourself)
 - [**Install locally**](#install-locally)
   - [Automatically](#automatically)
@@ -27,8 +26,6 @@ Influx database needs to be set up separately. I recommend the official [influxd
   - [Ruuvitags](#ruuvitags)
 - [Run](#run)
 - [Appendix](#appendix)
-  - [Setup InfluxDB](#setup-influxdb)
-  - [Setup Grafana](#setup-grafana)
 
 ---------
 
@@ -258,7 +255,7 @@ There are no longer any Raspberry Pi Zero W (ARMv6) compatible images for `influ
 
 Here is a docker compose for running Influxdb v1.8
 
-```docker compose
+```yml
 services:
   influxdb:
     image: influxdb:1.8
@@ -276,10 +273,8 @@ services:
     cap_add:
       - DAC_OVERRIDE
     # ---                    --- #
-
     ## User/Group == influxdb:influxdb
     ## UID/GID = 1500:1500
-
     restart: unless-stopped
 
   grafana:
@@ -292,7 +287,6 @@ services:
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_NAME=Koti
-
     restart: unless-stopped
 ```
 
