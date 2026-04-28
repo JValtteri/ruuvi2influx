@@ -1,0 +1,16 @@
+services:
+  logger:
+    image: ghcr.io/JValtteri/ruuvi2influx:latest
+    container_name: ruuvi2influx
+    cap_drop:
+      - ALL
+    cap_add:
+      - CAP_DAC_OVERRIDE
+      - NET_ADMIN
+      - NET_RAW
+      - CHOWN
+    network_mode: host
+    #read_only: true
+    volumes:
+      - ./config.yml:/app/config.yml:ro
+    restart: unless-stopped

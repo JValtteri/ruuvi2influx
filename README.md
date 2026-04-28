@@ -1,5 +1,7 @@
 # Ruuvi2influx
-**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**  
+**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**
+
+[![Docker Image Build](https://github.com/JValtteri/ruuvi2influx/actions/workflows/build-docker-image.yml/badge.svg)](https://github.com/JValtteri/ruuvi2influx/actions/workflows/build-docker-image.yml)
 
 **For Docker implementation see [**Docker Version**](#docker-version)**
 
@@ -12,7 +14,6 @@ Influx database needs to be set up separately. I recommend the official [influxd
   - [Software Requirements](#software-requirements-for-local-instals)
 - [Features](#features)
 - [**Docker Version**](#docker-version)
-  - [Pull The Docker Image](#pull-the-docker-image)
   - [Configure](#configure)
   - [Run the ready image](#run-the-ready-image)
   - [or Build the image yourself](#or-build-the-image-yourself)
@@ -35,30 +36,33 @@ Influx database needs to be set up separately. I recommend the official [influxd
 
 | **OS:** | Linux |
 | :-- | :-- |
-| **Architecture:** | ARMv6, ARMv7, ARM64, x86, AMD64 and others |
+| **Architecture:** | ARMv7, ARM64 |
 
 **Docker images may not be available for all platforms, but can be built with the included script.*
 
+Docker support for `arm/v6` i.e. **Pi Zero W** support had to be dropped unfortunately, because compatible base images have been discontinued.
+[Local install](#install-locally) option is still available and works on `arm/v6`.
+
 ### Hardware Requirements ###
 
-- Bluetooth for example integrated in Raspberry **Pi Zero W** and later
-- RuuviTags: RuuviTag default RAW-format is used. 
+- Bluetooth: Such as the one integrated into Raspberry **Pi Zero W** and later
+- RuuviTags: RuuviTag RAW-format is used.
 
 ### Software Requirements for Local Instals:
 - [Python 3.6+](https://docs.python.org/) or newer
 - Linux OS
 - Bluez (requires Linux)
-- [RuuviTag Sensor Python Package](https://github.com/ttu/ruuvitag-sensor) by [Tomi Tuhkanen](https://github.com/ttu)
+- [RuuviTag Sensor Python Package](https://github.com/ttu/ruuvitag-sensor) (v1.2.1) by [Tomi Tuhkanen](https://github.com/ttu)
 - [influxdb-python](https://github.com/influxdata/influxdb-python) library
 
 ## Features ##
-- Listenes to selected RuuviTags
+- Listens  to selected RuuviTags
 - Collects:
   - Temperature
   - Humidity
   - Pressure
   - Voltage
-- Outputs measurements to stdout
+- Outputs measurements to `stdout`
 - Send to InfluxDB via HTTP
 - Optional data processing and filtering
 - Configurable with config.yml
@@ -68,7 +72,20 @@ Influx database needs to be set up separately. I recommend the official [influxd
 
 ## Docker Version
 
-Dedicated docker page: *https://hub.docker.com/r/jvaltteri/ruuvi2influx*
+Docker images are now built automatically usign GitHub actions.
+
+Stable images are published on release:
+```
+ghcr.io/JValtteri/ruuvi2influx:latest
+ghcr.io/JValtteri/ruuvi2influx:{version number}
+```
+
+Tip of `master` branch is published as `dev`:
+```
+ghcr.io/JValtteri/ruuvi2influx:dev
+```
+
+Old docker hub page for `arm/v6` image: *https://hub.docker.com/r/jvaltteri/ruuvi2influx*. Using the outdated image is not recommended. It's better to [install on bare metal](#install-locally).
 
 Instructions for setting up everything else: [ruuvitags-raspberrypi-zero](https://github.com/JValtteri/ruuvitags-raspberrypi-zero)
 
@@ -79,31 +96,17 @@ Instructions for setting up everything else: [ruuvitags-raspberrypi-zero](https:
 - [Run the ready image](#run-the-ready-image)
 - [or Build the image yourself](#or-build-the-image-yourself)
 
-### Pull The Docker Image
-
-```docker pull jvaltteri/ruuvi2influx```
-
-*At the time of writing, the ready image is only for* **ARM32v6** *(Rasapberry Pi Zero).*
-
 ### Configure
 
-Create a `config.yml` in the same directroy, where you'll be starting the container from. 
+Create a `config.yml` in the same directroy, where you'll be starting the container from.
 
 You can use the [**example_config.yml**](example_config.yml) as a template.
 See [**Config**](#config) section for detais.
 
-### Run the ready image
+### Run the ready image using Docker Compose
 
-Debian based image
-```bash
-$ docker run \
-    -d \
-    --name ruuvi \
-    --restart unless-stopped \
-    --net=host \
-    --cap-add=NET_ADMIN \
-    --mount type=bind,source="$(pwd)"/config.yml,target=/app/config.yml,readonly \
-    ruuvi2influx:latest
+```
+docker compose up
 ```
 
 ### or Build the image yourself
@@ -125,29 +128,12 @@ $ sudo ./install.sh
 
 ### Manually
 
-#### Install Python 3 ###
+See the [instell script](./install.sh)
 
-```
-$ sudo apt-get update
-$ sudo apt-get install python3
-$ sudo apt-get install python3-pip
-```
-
-#### Install and Update pip
-```
-sudo apt-get -y install python3-pip
-sudo pip3 install --upgrade pip
-```
-
-#### Install bluez for bluetooth communication
-```
-sudo apt-get install bluez
-sudo apt-get install bluez-hcidump
-```
-#### Install Python libraries
-```
-$ pip3 install -r requirements.txt
-```
+1. Install Python 3
+2. Install and Update pip
+3. Install bluez for bluetooth communication: `bluez` & `bluez-hcidump`
+4. Install Python libraries (`requirements.txt`)
 
 -----
 
@@ -178,7 +164,7 @@ bloat and makes queries faster.
 
 To turn off filtering and internal processing, set sample_interval to 0.
 Do this if you have room for a large databace and processing power for
-large queries and want to controll all the processing your self.
+large queries and want to controll all the processing yourself.
 
 For light weight Raspberry Pi setup, the 60-900 seconds should be fine.
 
@@ -191,7 +177,7 @@ sample_interval: 60 # seconds
 
 ### Event Queue
 
-If the connection to the databace is interrupted, how meny measurements
+If the connection to the databace is interrupted, this many measurements
 should be held in queue, untill connection resumes.
 
 Large queue takes up RAM. When connection resumes, a very large WRITE reaquest
@@ -235,7 +221,7 @@ tags:
 
 ## Run ##
 
-Now you can run it manually:
+You can run manually:
 
 ```bash
 $ ./ruuvi2influx.py
@@ -249,7 +235,7 @@ For non-docker setups it is recommended to setup a start script utilizing `scree
 screen -S logger -d -m python3 ruuvi2influx.py
 ```
 
-Thre is a ready script for that
+There's a script provided for that purpose:
 ```
 start_logger.sh
 ```
@@ -258,7 +244,7 @@ start_logger.sh
 
 ## Appendix
 
-The **influxdb** needs to be [installed](#setup-influxdb) seperately. If you don't already have a system for [visualizing](https://play.grafana.org/d/000000012/grafana-play-home?orgId=1) the data. I recommend [Grafana](https://grafana.com/). 
+The **influxdb** needs to be [installed](#setup-influxdb) seperately. If you don't already have a system for [visualizing](https://play.grafana.org/d/000000012/grafana-play-home?orgId=1) the data. I recommend [Grafana](https://grafana.com/).
 
 For [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) version with MySQL and Dweet support, see the [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) branch
 
@@ -266,13 +252,43 @@ For [***legacy***](https://github.com/JValtteri/ruuvi2influx/tree/legacy) versio
 
 #### Official image
 ```
-docker pull influxdb:latest
+docker pull influxdb:1.8
+```
+*Influxdb is now on version 3. `:latest` tag will soon point to it, therefore version `1.x` must be explicitly defined.*
+
+Here is a docker compose for running Influxdb v1.8
+
+```docker compose
+services:
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - /home/pi/influxdb/influxdbdata/:/var/lib/influxdb/data/
+      - /home/pi/influxdb/influxdbmeta/:/var/lib/influxdb/meta/
+      - /home/pi/influxdb/influxdb.conf:/var/lib/influxdb/influxdb.conf:ro
+    # --- Security Hardening --- #
+    cap_drop:           # Drop all kernel capabilities for security
+      - SYS_MODULE
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+    # ---                    --- #
+
+    ## User/Group == influxdb:influxdb
+    ## UID/GID = 1500:1500
+
+    restart: unless-stopped
 ```
 
 #### PiZero compatible image
 ```
 mendhak/arm32v6-influxdb
 ```
+**This image is very out of date and not recommended anymore.**
+Install the database on a supported platform instead.
 
 ### Setup Grafana
 
@@ -283,6 +299,4 @@ docker pull grafana/grafana
 
 #### PiZero compatible image
 
-There doesn't seem to be any reasonably up-to-date Grafana version compatible with Raspberry Pi Zero W (ARMv6). It is recommended to use a **Pi 3** or newer for hosting **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
-
-I may yet try to build a Zero compatible image, but since I have a working image on another Pi, the incentive for me is low right now.
+There are no longer any Raspberry Pi Zero W (ARMv6) compatible images for `influxdb`, nor `grafana`. It's recommended to use a **Pi 3** or newer for hosting **Influxdb-v1** and **Grafana**. Official ```grafana/grafana:latest``` image supports **ARMv7** and newer.
