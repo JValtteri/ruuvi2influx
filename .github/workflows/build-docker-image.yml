@@ -2,13 +2,13 @@ name: Publish docker image
 description: 'Publishes a multi-arch docker image'
 
 # Images are:
-# ghcr.io/JValtteri/ruuvi2influx:dev
-# ghcr.io/JValtteri/ruuvi2influx:{branch name}
+# ghcr.io/jvaltteri/ruuvi2influx:dev
+# ghcr.io/jvaltteri/ruuvi2influx:{branch name}
 #
 #     and on release
 #
-# ghcr.io/JValtteri/ruuvi2influx:latest
-# ghcr.io/JValtteri/ruuvi2influx:{release tag}
+# ghcr.io/jvaltteri/ruuvi2influx:latest
+# ghcr.io/jvaltteri/ruuvi2influx:{release tag}
 #   recommend convention: 'x.x.x' (e.g. '1.10.1' ) )
 
 on:

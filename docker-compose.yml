@@ -1,6 +1,6 @@
 services:
   logger:
-    image: ghcr.io/JValtteri/ruuvi2influx:latest
+    image: ghcr.io/jvaltteri/ruuvi2influx:latest
     container_name: ruuvi2influx
     cap_drop:
       - ALL
