@@ -1,7 +1,8 @@
 # Ruuvi2influx
-**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**
 
 [![Docker Image Build](https://github.com/JValtteri/ruuvi2influx/actions/workflows/build-docker-image.yml/badge.svg)](https://github.com/JValtteri/ruuvi2influx/actions/workflows/build-docker-image.yml)
+
+**Log RuuviTag data to [InfluxDB](https://www.influxdata.com/) from multiple [RuuviTags](https://ruuvi.com/).**
 
 **For Docker implementation see [**Docker Version**](#docker-version)**
 
@@ -15,7 +16,8 @@ Influx database needs to be set up separately. I recommend the official [influxd
 - [Features](#features)
 - [**Docker Version**](#docker-version)
   - [Configure](#configure)
-  - [or Build the image yourself](#or-build-the-image-yourself)
+  - [Run Using Docker Compose](#run-the-ready-image-using-docker-compose))
+  - [Building the image manually](#building-the-image-manually)
 - [**Install locally**](#install-locally)
   - [Automatically](#automatically)
   - [Manually](#manually)
@@ -88,10 +90,9 @@ Instructions for setting up everything else: [ruuvitags-raspberrypi-zero](https:
 
 ### Table of contents
 
-- [Pull The Docker Image](#pull-the-docker-image)
 - [Configure](#configure)
-- [Run the ready image](#run-the-ready-image)
-- [or Build the image yourself](#or-build-the-image-yourself)
+- [Run Using Docker Compose](#run-the-ready-image-using-docker-compose))
+- [Building the image manually](#building-the-image-manually)
 
 ### Configure
 
@@ -106,7 +107,7 @@ See [**Config**](#config) section for detais.
 docker compose up
 ```
 
-### or Build the image yourself
+### Building the image manually
 
 To build a container compatible with your device run
 ```bash
@@ -253,7 +254,7 @@ There are no longer any Raspberry Pi Zero W (ARMv6) compatible images for `influ
 
 #### `docker-compose.yml`
 
-Here is a docker compose for running Influxdb v1.8
+Here is a docker compose for running Influxdb and Grafana
 
 ```yml
 services:
@@ -319,7 +320,7 @@ services:
     - URL: `http://[influxdb IP]:8086`
     - Basic auth: `enable`
         - User: `grafana`
-        - Password: `[read_password]`
+        - Password: `[password]`
     - Database: `ruuvitags`
     - User: `grafana`
     - Password: `[read_password]`
